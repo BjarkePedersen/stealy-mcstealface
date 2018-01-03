@@ -1,9 +1,7 @@
-
-
-const canvas = document.querySelector("canvas") || document.createElement("canvas")
-const ctx = canvas.getContext("2d")
+const canvas =
+	document.querySelector("canvas") || document.createElement("canvas")
+const ctx = canvas.getContext("2d")!
 document.body.appendChild(canvas)
-
 
 const gridSize = 32
 const width = 500
@@ -35,7 +33,6 @@ const setBlock = (block: Block, array: Block[][], x: number, y: number) => {
 	array[x][y] = block
 }
 
-
 const grassEverywhere = () => {
 	for (let x = 0; x < width / gridSize; x++) {
 		for (let y = 0; y < height / gridSize; y++) {
@@ -49,7 +46,6 @@ setBlock({ blockType: "concrete" }, gridArray, 5, 5)
 setBlock({ blockType: "asphalt" }, gridArray, 6, 4)
 
 const loop = () => {
-
 	// Background
 	ctx.fillStyle = "#f4f4f4"
 	ctx.fillRect(0, 0, width, height)
@@ -57,17 +53,19 @@ const loop = () => {
 	ctx.fillStyle = "#000000"
 	gridArray.map((n, x) => {
 		n.map((block, y) => {
-
-			if (block.blockType == "grass") { ctx.fillStyle = "#7ad155" }
-			if (block.blockType == "concrete") { ctx.fillStyle = "#b5b5b5" }
-			if (block.blockType == "asphalt") { ctx.fillStyle = "#494949" }
+			if (block.blockType == "grass") {
+				ctx.fillStyle = "#7ad155"
+			}
+			if (block.blockType == "concrete") {
+				ctx.fillStyle = "#b5b5b5"
+			}
+			if (block.blockType == "asphalt") {
+				ctx.fillStyle = "#494949"
+			}
 
 			ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize)
 		})
-
 	})
-
-
 
 	requestAnimationFrame(loop)
 }
