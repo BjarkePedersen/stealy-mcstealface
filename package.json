@@ -1,0 +1,24 @@
+{
+  "name": "stealy-mcstealface",
+  "version": "1.0.0",
+  "description": "ligemeget",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BjarkePedersen/stealy-mcstealface.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BjarkePedersen/stealy-mcstealface/issues"
+  },
+  "homepage": "https://github.com/BjarkePedersen/stealy-mcstealface#readme",
+  "devDependencies": {
+    "parcel-bundler": "^1.4.1",
+    "typescript": "^2.6.2"
+  }
+}
