@@ -1,13 +1,18 @@
+import * as assets from "./assets"
+
 import {
+	CarEntity,
 	ControlableEntity,
 	Entities,
 	Entity,
+	PlayerEntity,
 	SpriteEntity,
 	Tile,
 	UpdateContext,
 	WorldEntity,
 	updateEntity,
 } from "./entities"
+import { add, mul, sub, unit } from "./misc"
 
 import { Inputs } from "./inputs"
 
@@ -51,22 +56,55 @@ const grassEverywhere = (gridArray: Tile[][]) => {
 }
 
 const main = async () => {
+	const images = await assets.assets
+	const juices = assets.createAtlas(images.juice, 20, 20)
+
 	const inputs = new Inputs(window.document.body)
 	const entities = new Entities()
 
 	const playerImage: SpriteEntity = {
 		id: entities.allocId(),
 		entityType: "sprite-entity",
-		image: "",
+		image: "juice",
 	}
 	entities.registerEntity(playerImage)
 
-	const player: ControlableEntity = {
+	const playerEntity: ControlableEntity = {
 		id: entities.allocId(),
 		entityType: "controlable-entity",
-		speed: 3,
+		speed: 10,
 		child: playerImage.id,
 		position: [2, 2],
+	}
+	entities.registerEntity(playerEntity)
+
+	const car1: CarEntity = {
+		id: entities.allocId(),
+		entityType: "car-entity",
+		child: playerImage.id,
+		acceleration: 0,
+		direction: 0,
+		velocity: [0.01, 0],
+		position: [2, 2],
+	}
+	entities.registerEntity(car1)
+
+	const car2: CarEntity = {
+		id: entities.allocId(),
+		entityType: "car-entity",
+		child: playerImage.id,
+		acceleration: 0,
+		direction: 0,
+		velocity: [0.01, 0],
+		position: [10, 14],
+	}
+	entities.registerEntity(car2)
+
+	const player: PlayerEntity = {
+		id: entities.allocId(),
+		entityType: "player-entity",
+		child: playerEntity.id,
+		vehiecle: void 0,
 	}
 	entities.registerEntity(player)
 
@@ -75,7 +113,7 @@ const main = async () => {
 		idToFollow: player.id,
 		entityType: "world",
 		gridArray: [],
-		children: [player.id],
+		children: [car1.id, car2.id, player.id],
 		camera: [0, 0],
 	}
 	entities.registerEntity(world)
@@ -130,20 +168,52 @@ const main = async () => {
 				return
 			}
 			case "controlable-entity": {
-				drawEntity(entities.lookUpEntity(entity.child)!, dt, [
-					offset[0] + entity.position[0],
-					offset[1] + entity.position[1],
-				])
+				drawEntity(
+					entities.lookUpEntity(entity.child)!,
+					dt,
+					add(offset, entity.position),
+				)
 				return
 			}
+			case "player-entity": {
+				if (entity.vehiecle) {
+					return
+				}
+
+				drawEntity(entities.lookUpEntity(entity.child)!, dt, offset)
+			}
 			case "sprite-entity": {
-				ctx.fillStyle = "red"
-				ctx.fillRect(
-					offset[0] * gridSize,
-					offset[1] * gridSize,
+				assets.drawFromIndex(juices, Math.floor((dt / 100) % 20))(
+					ctx,
+					(offset[0] - 0.5) * gridSize,
+					(offset[1] - 0.5) * gridSize,
 					gridSize,
 					gridSize,
 				)
+				return
+			}
+			case "car-entity": {
+				ctx.beginPath()
+				ctx.fillStyle = "red"
+				ctx.arc(
+					(entity.position[0] + offset[0]) * gridSize,
+					(entity.position[1] + offset[1]) * gridSize,
+					gridSize / 2,
+					0,
+					Math.PI * 2,
+				)
+				ctx.moveTo(
+					(entity.position[0] + offset[0]) * gridSize,
+					(entity.position[1] + offset[1]) * gridSize,
+				)
+				ctx.lineTo(
+					(entity.position[0] + offset[0] + unit(entity.velocity)[0] * 2) *
+						gridSize,
+					(entity.position[1] + offset[1] + unit(entity.velocity)[1] * 2) *
+						gridSize,
+				)
+				ctx.stroke()
+				ctx.fill()
 				return
 			}
 		}
@@ -153,11 +223,14 @@ const main = async () => {
 		dt: 0,
 		inputs,
 		lookUpEntity: entities.lookUpEntity,
+		entitiesWithType: entities.entitiesWithType,
 	}
 
-	let last = Date.now()
+	const first = Date.now()
+	let last = first
 	const loop = () => {
 		const now = Date.now()
+		const t = now - first
 		const dt = (now - last) / 1000
 		last = now
 
@@ -170,7 +243,7 @@ const main = async () => {
 		ctx.fillStyle = "#f4f4f4"
 		ctx.fillRect(0, 0, width, height)
 
-		drawEntity(world, dt, [0, 0])
+		drawEntity(world, t, [0, 0])
 
 		ctx.fillText(`${Math.floor(1 / dt)}fps`, 10, 20)
 

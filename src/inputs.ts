@@ -1,29 +1,30 @@
 import { keys } from "./misc"
 
-const KEYS = {
+const KEY_MAP = {
+	ENTER: 13,
 	W: 87,
 	A: 65,
 	S: 83,
 	D: 68,
 }
 
-const KEYSL = keys(KEYS)
+const KEYS = keys(KEY_MAP)
 
-const REGISTERED_KEYS = KEYSL.reduce(
+const REGISTERED_KEYS = KEYS.reduce(
 	(acc, key) => {
-		acc[KEYS[key]] = key
+		acc[KEY_MAP[key]] = key
 		return acc
 	},
-	{} as { [e: number]: keyof typeof KEYS },
+	{} as { [e: number]: keyof typeof KEY_MAP },
 )
 
 export class Inputs {
-	map = KEYSL.reduce(
+	map = KEYS.reduce(
 		(acc, key) => {
 			acc[key] = 0
 			return acc
 		},
-		{} as typeof KEYS,
+		{} as typeof KEY_MAP,
 	)
 
 	constructor(element: HTMLElement) {
@@ -42,18 +43,18 @@ export class Inputs {
 	}
 
 	onBlur = () => {
-		KEYSL.forEach(key => {
+		KEYS.forEach(key => {
 			this.map[key] = 0
 		})
 	}
 
-	isDown = (key: keyof typeof KEYS) => this.map[key] != 0
-	upDown = (key: keyof typeof KEYS) => this.map[key] == 0
-	wasPressed = (key: keyof typeof KEYS) =>
+	isDown = (key: keyof typeof KEY_MAP) => this.map[key] != 0
+	upDown = (key: keyof typeof KEY_MAP) => this.map[key] == 0
+	wasPressed = (key: keyof typeof KEY_MAP) =>
 		this.map[key] == 1 || this.map[key] == -1
 
 	step() {
-		KEYSL.forEach(key => {
+		KEYS.forEach(key => {
 			this.map[key] = this.map[key] > 0 ? this.map[key] + 1 : 0
 		})
 	}
