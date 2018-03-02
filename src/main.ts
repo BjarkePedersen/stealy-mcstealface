@@ -1,6 +1,7 @@
 import * as OBJLoader from "three-obj-loader"
 import * as THREE from "three"
 import * as assets from "./assets"
+import * as scene1 from "./scenes/scene1"
 
 import {
 	Entities,
@@ -178,13 +179,16 @@ const main = async () => {
 	const images = await assets.assets
 	const juices = assets.createAtlas(images.juice, 20, 20)
 
-	const loader = new THREE.OBJLoader()
+	const inputs = new Inputs(window.document.body)
+	const entities = new Entities()
+	const loadingManager = new THREE.LoadingManager()
+
+	const loader = new THREE.OBJLoader(loadingManager)
 	const loadObj = async (path: string) =>
 		new Promise<THREE.Group>(res =>
 			loader.load(path, group => {
 				const g = new THREE.Group()
-				group.rotation.x = Math.PI / 2
-				group.rotation.y = Math.PI / 2
+				group.rotation.x = group.rotation.y = Math.PI / 2
 				group.traverse(x => {
 					x.castShadow = true
 					x.receiveShadow = true
@@ -194,75 +198,14 @@ const main = async () => {
 			}),
 		)
 
-	const carModel = await loadObj(await import("./assets/suzanne.obj"))
-	carModel.receiveShadow = true
-	carModel.castShadow = true
+	const { world, models } = await scene1.build(
+		entities,
+		renderer3d.camera,
+		loadObj,
+		material,
+	)
 
-	const inputs = new Inputs(window.document.body)
-	const entities = new Entities()
-
-	const playerImage = entities.createEntity("sprite-entity", {
-		model: new THREE.Mesh(
-			new THREE.CylinderGeometry(0.5, 0.5, 1, 100),
-			material,
-		),
-		image: "juice",
-	})
-	playerImage.inner.model.rotation.x = Math.PI / 2
-
-	const playerEntity = entities.createEntity("controlable-entity", {
-		speed: 10,
-		child: ref(playerImage),
-		position: [2, 2],
-	})
-
-	const car1 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
-		acceleration: 0,
-		steering: 0,
-		direction: [1, 0],
-		velocity: [0.01, 0],
-		position: [2, 2],
-	})
-
-	const car2 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
-		acceleration: 0,
-		steering: 0,
-		direction: [1, 0],
-		velocity: [0.01, 0],
-		position: [10, 14],
-	})
-
-	const car3 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
-		acceleration: 0,
-		steering: 0,
-		direction: [1, 0],
-		velocity: [0.01, -0.01],
-		position: [-5, 12],
-	})
-
-	const player = entities.createEntity("player-entity", {
-		state: {
-			name: "initial",
-			child: ref(playerEntity),
-		},
-	})
-
-	const world = entities.createEntity("world", {
-		idToFollow: ref(player),
-		cameraObject: renderer3d.camera,
-		gridArray: [],
-		children: [ref(car1), ref(car2), ref(car3), ref(player)],
-		camera: [0, 0],
-	})
-	;[
-		car1.inner.model,
-		car2.inner.model,
-		car3.inner.model,
-		playerImage.inner.model,
-	].forEach(model => {
+	models.forEach(model => {
 		model.castShadow = true
 		model.receiveShadow = true
 		scene.add(model)
@@ -272,17 +215,17 @@ const main = async () => {
 	renderer3d.renderer.gammaOutput = true
 	renderer3d.renderer.shadowMap.enabled = true
 
-	grassEverywhere(world.inner.gridArray)
+	grassEverywhere(world.gridArray)
 
 	for (let x of new Array(50).fill(0).map((_, i) => i)) {
 		for (let y of new Array(7).fill(0).map((_, i) => i)) {
-			setTile({ tileType: "concrete" }, world.inner.gridArray, x + 1, 5 + y)
+			setTile({ tileType: "concrete" }, world.gridArray, x + 1, 5 + y)
 		}
 	}
 	for (let x of new Array(50).fill(0).map((_, i) => i)) {
 		for (let y of new Array(5).fill(0).map((_, i) => i)) {
 			if (!(y == 2 && (x % 5 == 1 || x % 5 == 2)))
-				setTile({ tileType: "asphalt" }, world.inner.gridArray, x + 1, 6 + y)
+				setTile({ tileType: "asphalt" }, world.gridArray, x + 1, 6 + y)
 		}
 	}
 
@@ -403,13 +346,13 @@ const main = async () => {
 		updateCtx.dt = dt
 
 		for (const entity of entities.entities) {
-			updateEntity(entity.inner, updateCtx)
+			updateEntity(entity, updateCtx)
 		}
 
 		// ctx.fillStyle = "#f4f4f4"
 		// ctx.fillRect(0, 0, width, height)
 
-		renderEntity(world.inner, entities, [0, 0])
+		renderEntity(world, entities, [0, 0])
 		renderer3d.renderer.render(scene, renderer3d.camera)
 
 		// ctx.fillText(`${Math.floor(1 / dt)}fps`, 10, 20)

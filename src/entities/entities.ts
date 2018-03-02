@@ -108,8 +108,6 @@ export interface UpdateContext {
 	) => EntityType<EntityMap[T]>[]
 }
 
-const exec = <T>(fn: T | (() => T)): T => (typeof fn == "function" ? fn() : fn)
-
 export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 	switch (entity.entityType) {
 		case "world": {
@@ -154,7 +152,7 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 			if (ctx.inputs.wasPressed("ENTER")) {
 				const closestCar = ctx.entitiesWithType("car-entity").reduce(
 					(closest, car) => {
-						const dist = len(sub(car.inner.position, child.position))
+						const dist = len(sub(car.position, child.position))
 						if (!closest || closest.dist > dist) return { dist, car }
 						return closest
 					},
