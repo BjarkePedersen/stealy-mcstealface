@@ -1,4 +1,7 @@
 {
-  "editor.formatOnSave": true,
-  "typescript.tsdk": "node_modules/typescript/lib"
+	"editor.formatOnSave": true,
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"reason.path.bsb": "./node_modules/.bin/bsb",
+	"reason.path.refmt": "./node_modules/.bin/refmt",
+	"reason.path.ocamlmerlin": "./node_modules/.bin/ocamlmerlin"
 }

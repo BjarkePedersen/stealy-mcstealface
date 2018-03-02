@@ -1,45 +1,161 @@
+import * as THREE from "three"
 import * as assets from "./assets"
 
 import {
-	CarEntity,
-	ControlableEntity,
 	Entities,
 	Entity,
-	PlayerEntity,
-	SpriteEntity,
 	Tile,
 	UpdateContext,
-	WorldEntity,
+	ref,
 	updateEntity,
 } from "./entities"
-import { add, mul, sub, unit } from "./misc"
+import { add, unit } from "./misc"
 
 import { Inputs } from "./inputs"
-
-const canvas =
-	document.querySelector("canvas") || document.createElement("canvas")
-const ctx = canvas.getContext("2d")!
-document.body.appendChild(canvas)
+import { renderEntity } from "./renderer-3d"
 
 const gridSize = 32
 const width = window.innerWidth
 const height = window.innerHeight
 
-canvas.width = width
-canvas.height = height
+const createRenderer2d = () => {
+	const canvas =
+		document.querySelector("canvas") || document.createElement("canvas")
+	const ctx = canvas.getContext("2d")!
+	document.body.appendChild(canvas)
 
-if (window.devicePixelRatio > 1) {
-	var canvasWidth = canvas.width
-	var canvasHeight = canvas.height
+	canvas.width = width
+	canvas.height = height
 
-	canvas.width = canvasWidth * window.devicePixelRatio
-	canvas.height = canvasHeight * window.devicePixelRatio
-	canvas.style.width = `${canvasWidth}px`
-	canvas.style.height = `${canvasHeight}px`
+	if (window.devicePixelRatio > 1) {
+		var canvasWidth = canvas.width
+		var canvasHeight = canvas.height
 
-	ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+		canvas.width = canvasWidth * window.devicePixelRatio
+		canvas.height = canvasHeight * window.devicePixelRatio
+		canvas.style.width = `${canvasWidth}px`
+		canvas.style.height = `${canvasHeight}px`
+
+		ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+	}
+
+	return { canvas, ctx }
 }
 
+const createRenderer3d = () => {
+	const camera = new THREE.PerspectiveCamera(
+		75,
+		window.innerWidth / window.innerHeight,
+		1,
+		5000,
+	)
+
+	const renderer = new THREE.WebGLRenderer()
+	// renderer.setPixelRatio(window.devicePixelRatio)
+	renderer.setSize(window.innerWidth, window.innerHeight)
+	document.body.appendChild(renderer.domElement)
+
+	return { renderer, camera }
+}
+
+const renderer3d = createRenderer3d()
+
+const scene = new THREE.Scene()
+scene.background = new THREE.Color().setHSL(0.6, 0, 1)
+scene.fog = new THREE.Fog(scene.background, 1, 5000)
+
+const geometry = new THREE.BoxGeometry(2, 1, 1)
+const material = new THREE.MeshPhongMaterial({
+	color: 0xffffff,
+	specular: 0xffffff,
+	shininess: 20,
+	morphTargets: true,
+	vertexColors: THREE.FaceColors,
+	flatShading: true,
+})
+// LIGHTS
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
+{
+	hemiLight.color.setHSL(0.6, 1, 0.6)
+	hemiLight.groundColor.setHSL(0.095, 1, 0.75)
+	hemiLight.position.set(0, 50, 0)
+	scene.add(hemiLight)
+
+	const hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10)
+	scene.add(hemiLightHelper)
+
+	//
+
+	const dirLight = new THREE.DirectionalLight(0xffffff, 1)
+	dirLight.color.setHSL(0.1, 1, 0.95)
+	dirLight.position.set(-1, 1.75, 1)
+	dirLight.position.multiplyScalar(30)
+	scene.add(dirLight)
+
+	dirLight.castShadow = true
+
+	dirLight.shadow.mapSize.width = 2048
+	dirLight.shadow.mapSize.height = 2048
+
+	var d = 50
+
+	dirLight.shadow.camera.left = -d
+	dirLight.shadow.camera.right = d
+	dirLight.shadow.camera.top = d
+	dirLight.shadow.camera.bottom = -d
+
+	dirLight.shadow.camera.far = 3500
+	dirLight.shadow.bias = -0.0001
+
+	const dirLightHeper = new THREE.DirectionalLightHelper(dirLight, 10)
+	scene.add(dirLightHeper)
+}
+
+// GROUND
+{
+	const groundGeo = new THREE.PlaneBufferGeometry(10000, 10000)
+	const groundMat = new THREE.MeshPhongMaterial({
+		color: 0xffffff,
+		specular: 0x050505,
+	})
+	groundMat.color.setHSL(0.095, 1, 0.75)
+
+	const ground = new THREE.Mesh(groundGeo, groundMat)
+	// ground.rotation.x = -Math.PI / 2
+	ground.position.z = -0.7
+	scene.add(ground)
+
+	ground.receiveShadow = true
+}
+
+// SKYDOME
+{
+	const vertexShader = document.getElementById("vertexShader")!.textContent!
+	const fragmentShader = document.getElementById("fragmentShader")!.textContent!
+	const uniforms = {
+		topColor: { value: new THREE.Color(0x0077ff) },
+		bottomColor: { value: new THREE.Color(0xffffff) },
+		offset: { value: 33 },
+		exponent: { value: 0.6 },
+	}
+	uniforms.topColor.value.copy(hemiLight.color)
+
+	scene.fog.color.copy(uniforms.bottomColor.value)
+
+	const skyGeo = new THREE.SphereGeometry(4000, 32, 15)
+	const skyMat = new THREE.ShaderMaterial({
+		vertexShader: vertexShader,
+		fragmentShader: fragmentShader,
+		uniforms: uniforms,
+		side: THREE.BackSide,
+	})
+
+	const sky = new THREE.Mesh(skyGeo, skyMat)
+	scene.add(sky)
+}
+
+renderer3d.camera.position.z = 10
+renderer3d.camera.rotation.x = 0.7
 const setTile = (tile: Tile, array: Tile[][], x: number, y: number) => {
 	if (!array[x]) {
 		array[x] = []
@@ -62,77 +178,96 @@ const main = async () => {
 	const inputs = new Inputs(window.document.body)
 	const entities = new Entities()
 
-	const playerImage: SpriteEntity = {
-		id: entities.allocId(),
-		entityType: "sprite-entity",
+	const playerImage = entities.createEntity("sprite-entity", {
+		model: new THREE.Mesh(
+			new THREE.CylinderGeometry(0.5, 0.5, 1, 100),
+			material,
+		),
 		image: "juice",
-	}
-	entities.registerEntity(playerImage)
+	})
+	playerImage.inner.model.rotation.x = Math.PI / 2
 
-	const playerEntity: ControlableEntity = {
-		id: entities.allocId(),
-		entityType: "controlable-entity",
+	const playerEntity = entities.createEntity("controlable-entity", {
 		speed: 10,
-		child: playerImage.id,
+		child: ref(playerImage),
 		position: [2, 2],
-	}
-	entities.registerEntity(playerEntity)
+	})
 
-	const car1: CarEntity = {
-		id: entities.allocId(),
-		entityType: "car-entity",
-		child: playerImage.id,
+	const car1 = entities.createEntity("car-entity", {
+		model: new THREE.Mesh(geometry, material),
 		acceleration: 0,
-		direction: 0,
+		steering: 0,
+		direction: [1, 0],
 		velocity: [0.01, 0],
 		position: [2, 2],
-	}
-	entities.registerEntity(car1)
+	})
 
-	const car2: CarEntity = {
-		id: entities.allocId(),
-		entityType: "car-entity",
-		child: playerImage.id,
+	const car2 = entities.createEntity("car-entity", {
+		model: new THREE.Mesh(geometry, material),
 		acceleration: 0,
-		direction: 0,
+		steering: 0,
+		direction: [1, 0],
 		velocity: [0.01, 0],
 		position: [10, 14],
-	}
-	entities.registerEntity(car2)
+	})
 
-	const player: PlayerEntity = {
-		id: entities.allocId(),
-		entityType: "player-entity",
-		child: playerEntity.id,
-		vehiecle: void 0,
-	}
-	entities.registerEntity(player)
+	const car3 = entities.createEntity("car-entity", {
+		model: new THREE.Mesh(geometry, material),
+		acceleration: 0,
+		steering: 0,
+		direction: [1, 0],
+		velocity: [0.01, -0.01],
+		position: [-5, 12],
+	})
 
-	const world: WorldEntity = {
-		id: entities.allocId(),
-		idToFollow: player.id,
-		entityType: "world",
+	const player = entities.createEntity("player-entity", {
+		state: {
+			name: "initial",
+			child: ref(playerEntity),
+		},
+	})
+
+	const world = entities.createEntity("world", {
+		idToFollow: ref(player),
+		cameraObject: renderer3d.camera,
 		gridArray: [],
-		children: [car1.id, car2.id, player.id],
+		children: [ref(car1), ref(car2), ref(car3), ref(player)],
 		camera: [0, 0],
-	}
-	entities.registerEntity(world)
+	})
+	;[
+		car1.inner.model,
+		car2.inner.model,
+		car3.inner.model,
+		playerImage.inner.model,
+	].forEach(model => {
+		model.castShadow = true
+		model.receiveShadow = true
+		scene.add(model)
+	})
 
-	grassEverywhere(world.gridArray)
+	renderer3d.renderer.gammaInput = true
+	renderer3d.renderer.gammaOutput = true
+	renderer3d.renderer.shadowMap.enabled = true
+
+	grassEverywhere(world.inner.gridArray)
 
 	for (let x of new Array(50).fill(0).map((_, i) => i)) {
 		for (let y of new Array(7).fill(0).map((_, i) => i)) {
-			setTile({ tileType: "concrete" }, world.gridArray, x + 1, 5 + y)
+			setTile({ tileType: "concrete" }, world.inner.gridArray, x + 1, 5 + y)
 		}
 	}
 	for (let x of new Array(50).fill(0).map((_, i) => i)) {
 		for (let y of new Array(5).fill(0).map((_, i) => i)) {
 			if (!(y == 2 && (x % 5 == 1 || x % 5 == 2)))
-				setTile({ tileType: "asphalt" }, world.gridArray, x + 1, 6 + y)
+				setTile({ tileType: "asphalt" }, world.inner.gridArray, x + 1, 6 + y)
 		}
 	}
 
+	let renderer2d: ReturnType<typeof createRenderer2d>
+
 	const drawEntity = (entity: Entity, dt: number, offset: [number, number]) => {
+		if (!renderer2d) renderer2d = createRenderer2d()
+		const { ctx } = renderer2d
 		switch (entity.entityType) {
 			case "world": {
 				entity.gridArray.forEach((n, x) => {
@@ -160,7 +295,7 @@ const main = async () => {
 					})
 				})
 				for (const child of entity.children) {
-					drawEntity(entities.lookUpEntity(child)!, dt, [
+					drawEntity(entities.lookUpEntity(child), dt, [
 						offset[0] - entity.camera[0] + width / (2 * gridSize),
 						offset[1] - entity.camera[1] + height / (2 * gridSize),
 					])
@@ -169,18 +304,26 @@ const main = async () => {
 			}
 			case "controlable-entity": {
 				drawEntity(
-					entities.lookUpEntity(entity.child)!,
+					entities.lookUpEntity(entity.child),
 					dt,
 					add(offset, entity.position),
 				)
 				return
 			}
 			case "player-entity": {
-				if (entity.vehiecle) {
+				if (entity.state.name == "in-car") {
+					const child = entities.lookUpEntity(entity.state.child)
+
+					const sprite = entities.lookUpEntity(child.child)
+					sprite.model.visible = false
 					return
 				}
+				const child = entities.lookUpEntity(entity.state.child)
+				const sprite = entities.lookUpEntity(child.child)
+				sprite.model.visible = true
 
-				drawEntity(entities.lookUpEntity(entity.child)!, dt, offset)
+				drawEntity(entities.lookUpEntity(entity.state.child), dt, offset)
+				return
 			}
 			case "sprite-entity": {
 				assets.drawFromIndex(juices, Math.floor((dt / 100) % 20))(
@@ -237,15 +380,16 @@ const main = async () => {
 		updateCtx.dt = dt
 
 		for (const entity of entities.entities) {
-			updateEntity(entity, updateCtx)
+			updateEntity(entity.inner, updateCtx)
 		}
 
-		ctx.fillStyle = "#f4f4f4"
-		ctx.fillRect(0, 0, width, height)
+		// ctx.fillStyle = "#f4f4f4"
+		// ctx.fillRect(0, 0, width, height)
 
-		drawEntity(world, t, [0, 0])
+		renderEntity(world.inner, entities, [0, 0])
+		renderer3d.renderer.render(scene, renderer3d.camera)
 
-		ctx.fillText(`${Math.floor(1 / dt)}fps`, 10, 20)
+		// ctx.fillText(`${Math.floor(1 / dt)}fps`, 10, 20)
 
 		inputs.step()
 		requestAnimationFrame(loop)
