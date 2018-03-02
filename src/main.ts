@@ -1,50 +1,13 @@
 import * as OBJLoader from "three-obj-loader"
 import * as THREE from "three"
-import * as assets from "./assets"
 import * as scene1 from "./scenes/scene1"
 
-import {
-	Entities,
-	Entity,
-	Tile,
-	UpdateContext,
-	ref,
-	updateEntity,
-} from "./entities"
-import { add, unit } from "./misc"
+import { Entities, UpdateContext, updateEntity } from "./entities"
 
 import { Inputs } from "./inputs"
 import { renderEntity } from "./renderer-3d"
 
 OBJLoader(THREE)
-
-const gridSize = 32
-const width = window.innerWidth
-const height = window.innerHeight
-
-const createRenderer2d = () => {
-	const canvas =
-		document.querySelector("canvas") || document.createElement("canvas")
-	const ctx = canvas.getContext("2d")!
-	document.body.appendChild(canvas)
-
-	canvas.width = width
-	canvas.height = height
-
-	if (window.devicePixelRatio > 1) {
-		var canvasWidth = canvas.width
-		var canvasHeight = canvas.height
-
-		canvas.width = canvasWidth * window.devicePixelRatio
-		canvas.height = canvasHeight * window.devicePixelRatio
-		canvas.style.width = `${canvasWidth}px`
-		canvas.style.height = `${canvasHeight}px`
-
-		ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-	}
-
-	return { canvas, ctx }
-}
 
 const createRenderer3d = () => {
 	const camera = new THREE.PerspectiveCamera(
@@ -68,7 +31,6 @@ const scene = new THREE.Scene()
 scene.background = new THREE.Color().setHSL(0.6, 0, 1)
 scene.fog = new THREE.Fog(scene.background, 1, 5000)
 
-const geometry = new THREE.BoxGeometry(2, 1, 1)
 const material = new THREE.MeshPhongMaterial({
 	color: 0xffffff,
 	specular: 0xffffff,
@@ -160,25 +122,8 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 
 renderer3d.camera.position.z = 10
 renderer3d.camera.rotation.x = 0.7
-const setTile = (tile: Tile, array: Tile[][], x: number, y: number) => {
-	if (!array[x]) {
-		array[x] = []
-	}
-	array[x][y] = tile
-}
-
-const grassEverywhere = (gridArray: Tile[][]) => {
-	for (let x = 0; x < width / gridSize; x++) {
-		for (let y = 0; y < height / gridSize; y++) {
-			setTile({ tileType: "grass" }, gridArray, x, y)
-		}
-	}
-}
 
 const main = async () => {
-	const images = await assets.assets
-	const juices = assets.createAtlas(images.juice, 20, 20)
-
 	const inputs = new Inputs(window.document.body)
 	const entities = new Entities()
 	const loadingManager = new THREE.LoadingManager()
@@ -215,119 +160,6 @@ const main = async () => {
 	renderer3d.renderer.gammaOutput = true
 	renderer3d.renderer.shadowMap.enabled = true
 
-	grassEverywhere(world.gridArray)
-
-	for (let x of new Array(50).fill(0).map((_, i) => i)) {
-		for (let y of new Array(7).fill(0).map((_, i) => i)) {
-			setTile({ tileType: "concrete" }, world.gridArray, x + 1, 5 + y)
-		}
-	}
-	for (let x of new Array(50).fill(0).map((_, i) => i)) {
-		for (let y of new Array(5).fill(0).map((_, i) => i)) {
-			if (!(y == 2 && (x % 5 == 1 || x % 5 == 2)))
-				setTile({ tileType: "asphalt" }, world.gridArray, x + 1, 6 + y)
-		}
-	}
-
-	let renderer2d: ReturnType<typeof createRenderer2d>
-
-	const drawEntity = (entity: Entity, dt: number, offset: [number, number]) => {
-		if (!renderer2d) renderer2d = createRenderer2d()
-		const { ctx } = renderer2d
-		switch (entity.entityType) {
-			case "world": {
-				entity.gridArray.forEach((n, x) => {
-					n.forEach((tile, y) => {
-						if (tile.tileType == "grass") {
-							ctx.fillStyle = "#7ad155"
-						}
-						if (tile.tileType == "concrete") {
-							ctx.fillStyle = "#b5b5b5"
-						}
-						if (tile.tileType == "asphalt") {
-							ctx.fillStyle = "#494949"
-						}
-
-						ctx.fillRect(
-							((x - offset[0] - entity.camera[0] + width / (2 * gridSize)) *
-								gridSize) |
-								0,
-							((y - offset[1] - entity.camera[1] + height / (2 * gridSize)) *
-								gridSize) |
-								0,
-							gridSize,
-							gridSize,
-						)
-					})
-				})
-				for (const child of entity.children) {
-					drawEntity(entities.lookUpEntity(child), dt, [
-						offset[0] - entity.camera[0] + width / (2 * gridSize),
-						offset[1] - entity.camera[1] + height / (2 * gridSize),
-					])
-				}
-				return
-			}
-			case "controlable-entity": {
-				drawEntity(
-					entities.lookUpEntity(entity.child),
-					dt,
-					add(offset, entity.position),
-				)
-				return
-			}
-			case "player-entity": {
-				if (entity.state.name == "in-car") {
-					const child = entities.lookUpEntity(entity.state.child)
-
-					const sprite = entities.lookUpEntity(child.child)
-					sprite.model.visible = false
-					return
-				}
-				const child = entities.lookUpEntity(entity.state.child)
-				const sprite = entities.lookUpEntity(child.child)
-				sprite.model.visible = true
-
-				drawEntity(entities.lookUpEntity(entity.state.child), dt, offset)
-				return
-			}
-			case "sprite-entity": {
-				assets.drawFromIndex(juices, Math.floor((dt / 100) % 20))(
-					ctx,
-					(offset[0] - 0.5) * gridSize,
-					(offset[1] - 0.5) * gridSize,
-					gridSize,
-					gridSize,
-				)
-				return
-			}
-			case "car-entity": {
-				ctx.beginPath()
-				ctx.fillStyle = "red"
-				ctx.arc(
-					(entity.position[0] + offset[0]) * gridSize,
-					(entity.position[1] + offset[1]) * gridSize,
-					gridSize / 2,
-					0,
-					Math.PI * 2,
-				)
-				ctx.moveTo(
-					(entity.position[0] + offset[0]) * gridSize,
-					(entity.position[1] + offset[1]) * gridSize,
-				)
-				ctx.lineTo(
-					(entity.position[0] + offset[0] + unit(entity.velocity)[0] * 2) *
-						gridSize,
-					(entity.position[1] + offset[1] + unit(entity.velocity)[1] * 2) *
-						gridSize,
-				)
-				ctx.stroke()
-				ctx.fill()
-				return
-			}
-		}
-	}
-
 	const updateCtx: UpdateContext = {
 		dt: 0,
 		inputs,
@@ -349,13 +181,8 @@ const main = async () => {
 			updateEntity(entity, updateCtx)
 		}
 
-		// ctx.fillStyle = "#f4f4f4"
-		// ctx.fillRect(0, 0, width, height)
-
 		renderEntity(world, entities, [0, 0])
 		renderer3d.renderer.render(scene, renderer3d.camera)
-
-		// ctx.fillText(`${Math.floor(1 / dt)}fps`, 10, 20)
 
 		inputs.step()
 		requestAnimationFrame(loop)
