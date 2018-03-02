@@ -1,3 +1,4 @@
+import * as OBJLoader from "three-obj-loader"
 import * as THREE from "three"
 import * as assets from "./assets"
 
@@ -13,6 +14,8 @@ import { add, unit } from "./misc"
 
 import { Inputs } from "./inputs"
 import { renderEntity } from "./renderer-3d"
+
+OBJLoader(THREE)
 
 const gridSize = 32
 const width = window.innerWidth
@@ -175,6 +178,26 @@ const main = async () => {
 	const images = await assets.assets
 	const juices = assets.createAtlas(images.juice, 20, 20)
 
+	const loader = new THREE.OBJLoader()
+	const loadObj = async (path: string) =>
+		new Promise<THREE.Group>(res =>
+			loader.load(path, group => {
+				const g = new THREE.Group()
+				group.rotation.x = Math.PI / 2
+				group.rotation.y = Math.PI / 2
+				group.traverse(x => {
+					x.castShadow = true
+					x.receiveShadow = true
+				})
+				g.add(group)
+				res(g)
+			}),
+		)
+
+	const carModel = await loadObj(await import("./assets/suzanne.obj"))
+	carModel.receiveShadow = true
+	carModel.castShadow = true
+
 	const inputs = new Inputs(window.document.body)
 	const entities = new Entities()
 
@@ -194,7 +217,7 @@ const main = async () => {
 	})
 
 	const car1 = entities.createEntity("car-entity", {
-		model: new THREE.Mesh(geometry, material),
+		model: carModel.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
@@ -203,7 +226,7 @@ const main = async () => {
 	})
 
 	const car2 = entities.createEntity("car-entity", {
-		model: new THREE.Mesh(geometry, material),
+		model: carModel.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
@@ -212,7 +235,7 @@ const main = async () => {
 	})
 
 	const car3 = entities.createEntity("car-entity", {
-		model: new THREE.Mesh(geometry, material),
+		model: carModel.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
@@ -373,7 +396,7 @@ const main = async () => {
 	let last = first
 	const loop = () => {
 		const now = Date.now()
-		const t = now - first
+		// const t = now - first
 		const dt = (now - last) / 1000
 		last = now
 

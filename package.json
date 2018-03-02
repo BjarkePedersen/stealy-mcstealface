@@ -23,6 +23,7 @@
     "typescript": "^2.8.0-dev.20180301"
   },
   "dependencies": {
-    "three": "^0.90.0"
+    "three": "^0.90.0",
+    "three-obj-loader": "^1.1.3"
   }
 }

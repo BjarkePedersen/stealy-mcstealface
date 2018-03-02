@@ -40,7 +40,7 @@ export interface Player {
 
 export interface Car {
 	entityType: "car-entity"
-	model: THREE.Mesh
+	model: THREE.Group
 
 	// The force produces by the motor
 	acceleration: number
