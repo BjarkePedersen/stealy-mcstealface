@@ -8,7 +8,20 @@ export const build = async (
 	loadObj: (path: string) => Promise<THREE.Group>,
 	material: THREE.Material,
 ) => {
-	const carModel = await loadObj(await import("../assets/suzanne.obj"))
+
+
+	// const testMaterial = new THREE.MeshStandardMaterial({
+	// 	color: 0xfafafa,
+	// 	metalness: 0,
+	// 	roughness: .2,
+	// })
+
+	// const loader = new THREE.JSONLoader();
+	// const carMesh = loader.load("../assets/models/car.json", function (gemoetry1) {
+	// 	return new THREE.Mesh(gemoetry1, testMaterial);
+	// });
+
+	const carModel = await loadObj(await import("../assets/models/mazda787b.obj"))
 	carModel.receiveShadow = true
 	carModel.castShadow = true
 

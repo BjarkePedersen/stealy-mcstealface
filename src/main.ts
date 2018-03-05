@@ -39,6 +39,13 @@ const material = new THREE.MeshPhongMaterial({
 	vertexColors: THREE.FaceColors,
 	flatShading: true,
 })
+
+const testMaterial = new THREE.MeshStandardMaterial({
+	color: 0xfafafa,
+	metalness: 0,
+	roughness: .2,
+})
+
 // LIGHTS
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 {
