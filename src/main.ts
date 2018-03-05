@@ -227,8 +227,8 @@ const main = async () => {
 				const rect: Rectangle = {
 					x: car.position[0],
 					y: car.position[1],
-					height: 1,
-					width: 1,
+					height: 2,
+					width: 4.7,
 					rotation: dir(car.direction),
 				}
 				return { car, edges: getEdges(rect), rect }
