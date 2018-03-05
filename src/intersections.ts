@@ -14,12 +14,13 @@ export const getEdges = (a: Rectangle): Vec2[] => {
 	if (true) {
 		// Rectangle
 		const center: Vec2 = [a.x, a.y]
-		const m = rotate([a.width / 2, a.height / 2], a.rotation)
+		const x = rotate([a.width / 2, 0], a.rotation)
+		const y = rotate([0, a.height / 2], a.rotation)
 		const edges: [Vec2, Vec2, Vec2, Vec2] = [
-			sub(center, m),
-			add(center, mul(m, [1, -1])),
-			add(center, mul(m, [-1, 1])),
-			add(center, m),
+			add(add(center, x), y),
+			add(sub(center, x), y),
+			sub(sub(center, x), y),
+			sub(add(center, x), y),
 		]
 		return edges
 	}
@@ -45,7 +46,7 @@ const project = (a: Shape, axis: Vec2): Vec2 => {
 }
 
 const overlaps = ([x0, y0]: Vec2, [x1, y1]: Vec2): boolean =>
-	Math.max(x0, y0) <= Math.min(x1, y1)
+	Math.max(x0, y0) > Math.min(x1, y1) || Math.min(x0, y0) > Math.max(x1, y1)
 
 const getOverlap = ([x0, y0]: Vec2, [x1, y1]: Vec2): number => {
 	const amin = Math.min(x0, y0)
@@ -76,5 +77,5 @@ export const sat = (a: Shape, b: Shape) => {
 		}
 	}
 
-	return [smallest, overlap]
+	return [smallest, overlap] as [Vec2 | null, number]
 }
