@@ -8,22 +8,20 @@ export const build = async (
 	loadObj: (path: string) => Promise<THREE.Group>,
 	material: THREE.Material,
 ) => {
-
-
-	// const testMaterial = new THREE.MeshStandardMaterial({
-	// 	color: 0xfafafa,
-	// 	metalness: 0,
-	// 	roughness: .2,
-	// })
-
-	// const loader = new THREE.JSONLoader();
-	// const carMesh = loader.load("../assets/models/car.json", function (gemoetry1) {
-	// 	return new THREE.Mesh(gemoetry1, testMaterial);
-	// });
+	const carMaterial = new THREE.MeshStandardMaterial({
+		color: 0xfafafa,
+		metalness: 0,
+		roughness: 0.2,
+	})
 
 	const carModel = await loadObj(await import("../assets/models/mazda787b.obj"))
 	carModel.receiveShadow = true
 	carModel.castShadow = true
+	carModel.traverse(x => {
+		if (x instanceof THREE.Mesh) {
+			x.material = carMaterial
+		}
+	})
 
 	const playerImage = entities.createEntity("sprite-entity", {
 		model: new THREE.Mesh(
