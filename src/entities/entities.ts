@@ -210,14 +210,16 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 			const TURN_DRAG = 0.99
 			const ACCELERATION_SPEED = 0.2
 
-			const angle = dir(entity.direction) + entity.steering * TURN_SPEED
+			const face = dot(entity.direction, normalize(entity.velocity))
+
+			const angle =
+				dir(entity.direction) + entity.steering * TURN_SPEED * Math.sign(face)
 
 			const wheels = polar(angle, 1)
 
 			entity.direction = normalize(
 				lerp(entity.direction, len(entity.velocity) * TURN_SPEED, wheels),
 			)
-			const face = dot(entity.direction, normalize(entity.velocity))
 			const straight = Math.abs(face)
 			entity.velocity = add(
 				scale(
@@ -233,6 +235,9 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 				scale(wheels, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
 			)
 			entity.position = add(entity.position, entity.velocity)
+
+			// Note(oeb25): Do bounding box update and collision
+
 			if (!entity.boundingBox) {
 				entity.boundingBox = ref(
 					ctx.createEntity("bounding-box", carBoundingBox(entity)),
