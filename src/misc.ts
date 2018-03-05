@@ -2,6 +2,8 @@ export const keys = <T>(a: T) => Object.keys(a) as (keyof T)[]
 export const values = <T>(a: T) =>
 	(Object.keys(a) as (keyof T)[]).map(key => a[key])
 
+export type Omit<T, S> = Pick<T, Exclude<keyof T, S>>
+
 export type Vec2 = [number, number]
 
 export const add = ([x0, y0]: Vec2, [x1, y1]: Vec2): Vec2 => [x0 + x1, y0 + y1]

@@ -1,3 +1,5 @@
+import { Omit } from "../misc"
+
 // Facade interface
 export interface EntityId {
 	key: ["entity-id", number]
@@ -16,8 +18,6 @@ export type EntityType<T> = T & { [entityId]: EntityId }
 
 export const ref = <T>(entity: EntityType<T>): EntityReference<T> =>
 	({ [entityId]: entity[entityId] } as EntityReference<T>)
-
-type Omit<T, S> = Pick<T, Exclude<keyof T, S>>
 
 export class EntitySystem<
 	EntityMap extends { [key: string]: any },
@@ -47,13 +47,22 @@ export class EntitySystem<
 		return entity
 	}
 
-	lookUpEntity = <T>(id: EntityReference<T>): T =>
-		this.entities[(id[entityId] as any) as number] as T
+	lookUpEntity = <T>(id: EntityReference<T>): EntityType<T> =>
+		this.entities[(id[entityId] as any) as number] as EntityType<T>
 
 	entitiesWithType = <T extends keyof EntityMap>(
 		type: T,
+		other?: {
+			not?: EntityReference<EntityMap[T]>
+		},
 	): EntityType<EntityMap[T]>[] =>
-		this.entities.filter(e => e.entityType == type) as EntityType<
-			EntityMap[T]
-		>[]
+		this.entities.filter(e => {
+			if (e.entityType !== type) return false
+			if (other) {
+				if (other.not && e[entityId] === other.not[entityId]) {
+					return false
+				}
+			}
+			return true
+		}) as EntityType<EntityMap[T]>[]
 }
