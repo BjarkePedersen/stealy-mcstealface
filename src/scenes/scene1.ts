@@ -1,7 +1,8 @@
 import * as THREE from "three"
 
 import { Entities, ref } from "../entities"
-import { CubeTexture } from "three";
+
+import { CubeTexture } from "three"
 
 export const build = async (
 	scene: THREE.Scene,
@@ -11,28 +12,26 @@ export const build = async (
 	loadCubeMap: (files: string[]) => Promise<CubeTexture>,
 	material: THREE.Material,
 ) => {
+	scene.background = await loadCubeMap([
+		await import("../assets/textures/pisa/px.png"),
+		await import("../assets/textures/pisa/nx.png"),
+		await import("../assets/textures/pisa/py.png"),
+		await import("../assets/textures/pisa/ny.png"),
+		await import("../assets/textures/pisa/pz.png"),
+		await import("../assets/textures/pisa/nz.png"),
+	])
 
-	scene.background = await loadCubeMap(
-		[await import('../assets/textures/pisa/px.png'),
-		await import('../assets/textures/pisa/nx.png'),
-		await import('../assets/textures/pisa/py.png'),
-		await import('../assets/textures/pisa/ny.png'),
-		await import('../assets/textures/pisa/pz.png'),
-		await import('../assets/textures/pisa/nz.png')]
-	)
-
-	console.log(scene.background);
-
+	console.log(scene.background)
 
 	const dialectricParams = {
-		metalness: .5,
+		metalness: 0.5,
 		color: 0xed1c1c,
 		clearCoat: 1, // Always keep on 1
 		clearCoatRoughness: 0.01,
 		reflectivity: 1.0, // Always keep on 1
 		roughness: 0.4, // Always keep on 1
 		envMap: scene.background,
-	};
+	}
 
 	const carMaterial = new THREE.MeshPhysicalMaterial(dialectricParams)
 
@@ -44,6 +43,17 @@ export const build = async (
 			x.material = carMaterial
 		}
 	})
+
+	const carBB = new THREE.Mesh(
+		new THREE.WireframeGeometry(new THREE.CubeGeometry(4.7, 2, 1, 1)),
+		new THREE.MeshBasicMaterial({
+			color: 0xff0000,
+			wireframe: true,
+		}),
+	)
+
+	const carContainer = new THREE.Group()
+	carContainer.add(carModel, carBB)
 
 	const playerImage = entities.createEntity("sprite-entity", {
 		model: new THREE.Mesh(
@@ -61,7 +71,7 @@ export const build = async (
 	})
 
 	const car1 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
+		model: carContainer.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
@@ -70,7 +80,7 @@ export const build = async (
 	})
 
 	const car2 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
+		model: carContainer.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
@@ -79,7 +89,7 @@ export const build = async (
 	})
 
 	const car3 = entities.createEntity("car-entity", {
-		model: carModel.clone(),
+		model: carContainer.clone(),
 		acceleration: 0,
 		steering: 0,
 		direction: [1, 0],
