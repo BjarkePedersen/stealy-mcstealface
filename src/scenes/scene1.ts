@@ -25,12 +25,12 @@ export const build = async (
 
 
 	const dialectricParams = {
-		metalness: 0,
+		metalness: .5,
 		color: 0xed1c1c,
 		clearCoat: 1, // Always keep on 1
-		clearCoatRoughness: 1,
+		clearCoatRoughness: 0.01,
 		reflectivity: 1.0, // Always keep on 1
-		roughness: 0.1, // Always keep on 1
+		roughness: 0.4, // Always keep on 1
 		envMap: scene.background,
 	};
 
