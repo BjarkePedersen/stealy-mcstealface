@@ -37,6 +37,7 @@ const scene = new THREE.Scene()
 scene.background = new THREE.Color().setHSL(0.6, 0, 1)
 scene.fog = new THREE.Fog(scene.background, 1, 5000)
 
+renderer3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const material = new THREE.MeshPhongMaterial({
 	color: 0xffffff,
@@ -68,8 +69,12 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 
 	dirLight.castShadow = true
 
-	dirLight.shadow.mapSize.width = 2048
-	dirLight.shadow.mapSize.height = 2048
+	//Set up shadow properties for the light
+	dirLight.shadow.mapSize.width = 4096;
+	dirLight.shadow.mapSize.height = 4096;
+	dirLight.shadow.camera.near = 0.1;
+	dirLight.shadow.camera.far = 100;
+	dirLight.shadow.bias = -0.00001
 
 	var d = 50
 
@@ -77,9 +82,6 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 	dirLight.shadow.camera.right = d
 	dirLight.shadow.camera.top = d
 	dirLight.shadow.camera.bottom = -d
-
-	dirLight.shadow.camera.far = 3500
-	dirLight.shadow.bias = -0.0001
 
 	const dirLightHeper = new THREE.DirectionalLightHelper(dirLight, 10)
 	scene.add(dirLightHeper)
@@ -96,7 +98,7 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 
 	const ground = new THREE.Mesh(groundGeo, groundMat)
 	// ground.rotation.x = -Math.PI / 2
-	ground.position.z = -0.7
+	ground.position.z = 0
 	scene.add(ground)
 
 	ground.receiveShadow = true

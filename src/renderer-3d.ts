@@ -85,6 +85,7 @@ export const renderEntity = (
 		case "car-entity": {
 			entity.model.position.x = entity.position[0]
 			entity.model.position.y = -entity.position[1]
+			entity.model.position.z = 0.5
 			entity.model.rotation.z = -dir(entity.direction)
 			return
 		}
