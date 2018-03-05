@@ -1,26 +1,34 @@
 import * as THREE from "three"
 
 import { Entities, ref } from "../entities"
+import { CubeTexture } from "three";
 
 export const build = async (
 	scene: THREE.Scene,
 	entities: Entities,
 	camera: THREE.PerspectiveCamera,
 	loadObj: (path: string) => Promise<THREE.Group>,
-	loadCubeMap: (path: string, files: string[]) => void,
+	loadCubeMap: (files: string[]) => Promise<CubeTexture>,
 	material: THREE.Material,
 ) => {
 
-	scene.background = await loadCubeMap("../assets/textures/pisa/", ['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png'])
+	scene.background = await loadCubeMap(
+		[await import('../assets/textures/pisa/px.png'),
+		await import('../assets/textures/pisa/nx.png'),
+		await import('../assets/textures/pisa/py.png'),
+		await import('../assets/textures/pisa/ny.png'),
+		await import('../assets/textures/pisa/pz.png'),
+		await import('../assets/textures/pisa/nz.png')]
+	)
 
 	console.log(scene.background);
 
 
 	const dialectricParams = {
 		metalness: 0,
-		color: 0x00000,
+		color: 0xed1c1c,
 		clearCoat: 1, // Always keep on 1
-		clearCoatRoughness: 0.0,
+		clearCoatRoughness: 1,
 		reflectivity: 1.0, // Always keep on 1
 		roughness: 0.1, // Always keep on 1
 		envMap: scene.background,

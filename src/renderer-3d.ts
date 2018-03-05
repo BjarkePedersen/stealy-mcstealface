@@ -22,7 +22,7 @@ export const renderEntity = (
 					entity.camera = lerp(
 						entity.camera,
 						dt * 10.0,
-						sub(car.position, mul([unitVel[0], unitVel[1]], 10)),
+						sub(car.position, mul([unitVel[0], unitVel[1]], 5)),
 					)
 					cam.up = new THREE.Vector3(0, 0, 1)
 					cam.lookAt(new THREE.Vector3(car.position[0], -car.position[1], 0))

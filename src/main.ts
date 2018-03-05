@@ -148,10 +148,11 @@ const main = async () => {
 		)
 
 	const cubeMapLoader = new THREE.CubeTextureLoader(loadingManager)
-	const loadCubeMap = async (path: string, files: string[]) => {
-		cubeMapLoader.setPath(path)
-		cubeMapLoader.load(files)
-	}
+	const loadCubeMap = async (files: string[]) =>
+		new Promise<THREE.CubeTexture>(res =>
+			cubeMapLoader.load(files, texture => res(texture))
+		)
+
 
 	const { world, models } = await scene1.build(
 		scene,
