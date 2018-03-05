@@ -29,11 +29,14 @@ const createRenderer3d = () => {
 	return { renderer, camera }
 }
 
+
+
 const renderer3d = createRenderer3d()
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color().setHSL(0.6, 0, 1)
 scene.fog = new THREE.Fog(scene.background, 1, 5000)
+
 
 const material = new THREE.MeshPhongMaterial({
 	color: 0xffffff,
@@ -148,10 +151,19 @@ const main = async () => {
 			}),
 		)
 
+	const cubeMapLoader = new THREE.CubeTextureLoader(loadingManager)
+	const loadCubeMap = async (files: string[]) =>
+		new Promise<THREE.CubeTexture>(res =>
+			cubeMapLoader.load(files, texture => res(texture))
+		)
+
+
 	const { world, models } = await scene1.build(
+		scene,
 		entities,
 		renderer3d.camera,
 		loadObj,
+		loadCubeMap,
 		material,
 	)
 

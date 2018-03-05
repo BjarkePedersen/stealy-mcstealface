@@ -1,18 +1,40 @@
 import * as THREE from "three"
 
 import { Entities, ref } from "../entities"
+import { CubeTexture } from "three";
 
 export const build = async (
+	scene: THREE.Scene,
 	entities: Entities,
 	camera: THREE.PerspectiveCamera,
 	loadObj: (path: string) => Promise<THREE.Group>,
+	loadCubeMap: (files: string[]) => Promise<CubeTexture>,
 	material: THREE.Material,
 ) => {
-	const carMaterial = new THREE.MeshStandardMaterial({
-		color: 0xfafafa,
-		metalness: 0,
-		roughness: 0.2,
-	})
+
+	scene.background = await loadCubeMap(
+		[await import('../assets/textures/pisa/px.png'),
+		await import('../assets/textures/pisa/nx.png'),
+		await import('../assets/textures/pisa/py.png'),
+		await import('../assets/textures/pisa/ny.png'),
+		await import('../assets/textures/pisa/pz.png'),
+		await import('../assets/textures/pisa/nz.png')]
+	)
+
+	console.log(scene.background);
+
+
+	const dialectricParams = {
+		metalness: .5,
+		color: 0xed1c1c,
+		clearCoat: 1, // Always keep on 1
+		clearCoatRoughness: 0.01,
+		reflectivity: 1.0, // Always keep on 1
+		roughness: 0.4, // Always keep on 1
+		envMap: scene.background,
+	};
+
+	const carMaterial = new THREE.MeshPhysicalMaterial(dialectricParams)
 
 	const carModel = await loadObj(await import("../assets/models/mazda787b.obj"))
 	carModel.receiveShadow = true
