@@ -80,6 +80,7 @@ export const renderEntity = (
 		case "sprite-entity": {
 			entity.model.position.x = offset[0]
 			entity.model.position.y = -offset[1]
+			entity.model.position.z = 0.5
 			return
 		}
 		case "car-entity": {

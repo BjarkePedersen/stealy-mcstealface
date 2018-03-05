@@ -7,6 +7,7 @@ import { Entities, UpdateContext, updateEntity } from "./entities"
 import { Inputs } from "./inputs"
 import { renderEntity } from "./renderer-3d"
 
+
 OBJLoader(THREE)
 
 const createRenderer3d = () => {
@@ -72,9 +73,8 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 	//Set up shadow properties for the light
 	dirLight.shadow.mapSize.width = 4096;
 	dirLight.shadow.mapSize.height = 4096;
-	dirLight.shadow.camera.near = 0.1;
-	dirLight.shadow.camera.far = 100;
-	dirLight.shadow.bias = -0.00001
+	dirLight.shadow.bias = -0.0001
+	dirLight.shadow.radius = 1
 
 	var d = 50
 
@@ -105,30 +105,33 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 }
 
 // SKYDOME
-{
-	const vertexShader = document.getElementById("vertexShader")!.textContent!
-	const fragmentShader = document.getElementById("fragmentShader")!.textContent!
-	const uniforms = {
-		topColor: { value: new THREE.Color(0x0077ff) },
-		bottomColor: { value: new THREE.Color(0xffffff) },
-		offset: { value: 33 },
-		exponent: { value: 0.6 },
-	}
-	uniforms.topColor.value.copy(hemiLight.color)
+// {
+// 	const vertexShader = document.getElementById("vertexShader")!.textContent!
+// 	const fragmentShader = document.getElementById("fragmentShader")!.textContent!
+// 	const uniforms = {
+// 		topColor: { value: new THREE.Color(0x0077ff) },
+// 		bottomColor: { value: new THREE.Color(0xffffff) },
+// 		offset: { value: 33 },
+// 		exponent: { value: 0.6 },
+// 	}
+// 	uniforms.topColor.value.copy(hemiLight.color)
 
-	scene.fog.color.copy(uniforms.bottomColor.value)
+// 	scene.fog.color.copy(uniforms.bottomColor.value)
 
-	const skyGeo = new THREE.SphereGeometry(4000, 32, 15)
-	const skyMat = new THREE.ShaderMaterial({
-		vertexShader: vertexShader,
-		fragmentShader: fragmentShader,
-		uniforms: uniforms,
-		side: THREE.BackSide,
-	})
+// 	const skyGeo = new THREE.SphereGeometry(4000, 32, 15)
+// 	const skyMat = new THREE.ShaderMaterial({
+// 		vertexShader: vertexShader,
+// 		fragmentShader: fragmentShader,
+// 		uniforms: uniforms,
+// 		side: THREE.BackSide,
+// 	})
 
-	const sky = new THREE.Mesh(skyGeo, skyMat)
-	scene.add(sky)
-}
+// 	const sky = new THREE.Mesh(skyGeo, skyMat)
+// 	scene.add(sky)
+// }
+
+
+
 
 renderer3d.camera.position.z = 10
 renderer3d.camera.rotation.x = 0.7
@@ -158,7 +161,6 @@ const main = async () => {
 		new Promise<THREE.CubeTexture>(res =>
 			cubeMapLoader.load(files, texture => res(texture))
 		)
-
 
 	const { world, models } = await scene1.build(
 		scene,
