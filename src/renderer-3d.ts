@@ -1,7 +1,7 @@
 import * as THREE from "three"
 
 import { Entities, Entity } from "./entities"
-import { add, lerp, mul, sub, unit } from "./misc"
+import { add, dir, lerp, mul, sub, unit } from "./misc"
 
 export const renderEntity = (
 	entity: Entity,
@@ -85,10 +85,7 @@ export const renderEntity = (
 		case "car-entity": {
 			entity.model.position.x = entity.position[0]
 			entity.model.position.y = -entity.position[1]
-			entity.model.rotation.z = -Math.atan2(
-				entity.velocity[1],
-				entity.velocity[0],
-			)
+			entity.model.rotation.z = -dir(entity.direction)
 			return
 		}
 	}

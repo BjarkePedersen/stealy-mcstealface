@@ -6,11 +6,12 @@ import {
 	Vec2,
 	add,
 	dir,
+	dot,
 	len,
 	lerp,
 	mul,
+	normalize,
 	polar,
-	setLen,
 	sub,
 	unit,
 } from "../misc"
@@ -176,18 +177,31 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 			return
 		}
 		case "car-entity": {
-			const TURN_SPEED = 10
+			const TURN_SPEED = 0.3
+			const TURN_DRAG = 0.99
 			const ACCELERATION_SPEED = 0.2
 
-			const angle = dir(entity.velocity) + entity.steering * TURN_SPEED * ctx.dt
+			const angle = dir(entity.direction) + entity.steering * TURN_SPEED
 
-			const direction: Vec2 = polar(angle, 1)
+			const wheels = polar(angle, 1)
+
+			entity.direction = normalize(
+				lerp(entity.direction, len(entity.velocity) * TURN_SPEED, wheels),
+			)
+			const face = dot(entity.direction, normalize(entity.velocity))
+			const straight = Math.abs(face)
 			entity.velocity = add(
 				mul(
-					lerp(entity.velocity, 0.1, setLen(direction, len(entity.velocity))),
+					add(
+						mul(entity.velocity, TURN_DRAG * (1 - straight)),
+						mul(
+							entity.direction,
+							straight * len(entity.velocity) * (face > 0 ? 1 : -1),
+						),
+					),
 					0.99,
 				),
-				mul(direction, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
+				mul(wheels, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
 			)
 			entity.position = add(entity.position, entity.velocity)
 			return
