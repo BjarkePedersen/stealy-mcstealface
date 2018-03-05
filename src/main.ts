@@ -17,7 +17,11 @@ const createRenderer3d = () => {
 		5000,
 	)
 
-	const renderer = new THREE.WebGLRenderer()
+	const renderer = new THREE.WebGLRenderer({
+		canvas: document.querySelector("canvas") || void 0,
+	})
+	renderer.gammaInput = true
+	renderer.gammaOutput = true
 	// renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	document.body.appendChild(renderer.domElement)

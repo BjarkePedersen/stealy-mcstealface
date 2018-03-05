@@ -1,7 +1,7 @@
 import * as THREE from "three"
 
 import { Entities, Entity } from "./entities"
-import { add, dir, lerp, mul, sub, unit } from "./misc"
+import { add, dir, lerp, scale, sub, unit } from "./misc"
 
 export const renderEntity = (
 	entity: Entity,
@@ -22,7 +22,7 @@ export const renderEntity = (
 					entity.camera = lerp(
 						entity.camera,
 						dt * 10.0,
-						sub(car.position, mul([unitVel[0], unitVel[1]], 10)),
+						sub(car.position, scale([unitVel[0], unitVel[1]], 10)),
 					)
 					cam.up = new THREE.Vector3(0, 0, 1)
 					cam.lookAt(new THREE.Vector3(car.position[0], -car.position[1], 0))

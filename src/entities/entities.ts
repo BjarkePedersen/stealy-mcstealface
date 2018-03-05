@@ -9,9 +9,9 @@ import {
 	dot,
 	len,
 	lerp,
-	mul,
 	normalize,
 	polar,
+	scale,
 	sub,
 	unit,
 } from "../misc"
@@ -125,7 +125,7 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 						child: entity.state.child,
 					}
 					const child = ctx.lookUpEntity(entity.state.child)
-					const unitVel = unit(vehiecle.velocity)
+					const unitVel = unit(vehiecle.direction)
 					child.position = add(vehiecle.position, [unitVel[1], -unitVel[0]])
 					return
 				}
@@ -191,17 +191,17 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 			const face = dot(entity.direction, normalize(entity.velocity))
 			const straight = Math.abs(face)
 			entity.velocity = add(
-				mul(
+				scale(
 					add(
-						mul(entity.velocity, TURN_DRAG * (1 - straight)),
-						mul(
+						scale(entity.velocity, TURN_DRAG * (1 - straight)),
+						scale(
 							entity.direction,
 							straight * len(entity.velocity) * (face > 0 ? 1 : -1),
 						),
 					),
 					0.99,
 				),
-				mul(wheels, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
+				scale(wheels, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
 			)
 			entity.position = add(entity.position, entity.velocity)
 			return
