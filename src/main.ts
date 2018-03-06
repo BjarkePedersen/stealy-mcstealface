@@ -9,7 +9,6 @@ import { Inputs } from "./inputs"
 import { dir } from "./misc"
 import { renderEntity } from "./renderer-3d"
 
-
 OBJLoader(THREE)
 
 const createRenderer3d = () => {
@@ -24,9 +23,9 @@ const createRenderer3d = () => {
 		canvas:
 			(document.querySelector("#gameCanvas") as HTMLCanvasElement) || void 0,
 	})
+
 	renderer.gammaInput = true
 	renderer.gammaOutput = true
-	// renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	renderer.domElement.id = "gameCanvas"
 	document.body.appendChild(renderer.domElement)
@@ -40,7 +39,7 @@ const scene = new THREE.Scene()
 scene.background = new THREE.Color().setHSL(0.6, 0, 1)
 scene.fog = new THREE.Fog(scene.background, 1, 5000)
 
-renderer3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer3d.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 const material = new THREE.MeshPhongMaterial({
 	color: 0xffffff,
@@ -73,9 +72,9 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 	dirLight.castShadow = true
 
 	//Set up shadow properties for the light
-	dirLight.shadow.mapSize.width = 4096;
-	dirLight.shadow.mapSize.height = 4096;
-	dirLight.shadow.bias = -0.0001
+	dirLight.shadow.mapSize.width = 4096
+	dirLight.shadow.mapSize.height = 4096
+	dirLight.shadow.bias = -0.00001
 	dirLight.shadow.radius = 1
 
 	var d = 50
@@ -131,9 +130,6 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 // 	const sky = new THREE.Mesh(skyGeo, skyMat)
 // 	scene.add(sky)
 // }
-
-
-
 
 renderer3d.camera.position.z = 10
 renderer3d.camera.rotation.x = 0.7
