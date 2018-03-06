@@ -2,8 +2,16 @@ import * as OBJLoader from "three-obj-loader"
 import * as THREE from "three"
 import * as scene1 from "./scenes/scene1"
 
-import { Car, Entities, UpdateContext, updateEntity } from "./entities"
-import { Rectangle, getEdges, sat } from "./intersections"
+import {
+	BoundingBox,
+	Car,
+	Entities,
+	EntityType,
+	UpdateContext,
+	ref,
+	updateEntity,
+} from "./entities"
+import { Rectangle, SatResult, getEdges, sat } from "./intersections"
 
 import { Inputs } from "./inputs"
 import { dir } from "./misc"
@@ -197,6 +205,19 @@ const main = async () => {
 	const updateCtx: UpdateContext = {
 		dt: 0,
 		inputs,
+		sat: bb => {
+			const others = entities.entitiesWithType("bounding-box", { not: ref(bb) })
+			return others.reduce<
+				false | { result: SatResult; boundingBox: EntityType<BoundingBox> }
+			>((smallest, other) => {
+				const result = sat(bb.shape, other.shape)
+				if (!result) return smallest
+				if (!smallest) return { result, boundingBox: other }
+				if (result.t < smallest.result.t) return { result, boundingBox: other }
+				return smallest
+			}, false)
+		},
+		createEntity: entities.createEntity,
 		lookUpEntity: entities.lookUpEntity,
 		entitiesWithType: entities.entitiesWithType,
 	}
@@ -219,11 +240,11 @@ const main = async () => {
 			e => e.entityType == "car-entity",
 		) as Car[]
 
-		ctx.restore()
+		// ctx.restore()
 		ctx.clearRect(0, 0, debugCanvas.width, debugCanvas.height)
-		ctx.save()
-		ctx.translate(100, 0)
-		ctx.scale(10, 10)
+		// ctx.save()
+		// ctx.translate(100, 0)
+		// ctx.scale(10, 10)
 		cars
 			.map(car => {
 				const rect: Rectangle = {
@@ -243,11 +264,24 @@ const main = async () => {
 				ctx.lineTo(self.edges[2][0], self.edges[2][1])
 				ctx.lineTo(self.edges[3][0], self.edges[3][1])
 				ctx.lineTo(self.edges[0][0], self.edges[0][1])
-				if (
-					others.map(other => sat(self.edges, other.edges)).filter(a => a)
-						.length > 0
-				) {
+				const result = others
+					.map(other => sat(self.edges, other.edges))
+					.filter(a => a)[0]
+				if (result) {
 					ctx.fillStyle = "red"
+					ctx.moveTo(debugCanvas.width / 2, debugCanvas.height / 2)
+					ctx.arc(
+						debugCanvas.width / 2,
+						debugCanvas.height / 2,
+						2,
+						0,
+						Math.PI * 2,
+					)
+					ctx.lineTo(
+						debugCanvas.width / 2 + result.direction[0] * 20,
+						debugCanvas.height / 2 + result.direction[1] * 20,
+					)
+					ctx.stroke()
 				} else {
 					ctx.fillStyle = "black"
 				}

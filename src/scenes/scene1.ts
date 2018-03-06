@@ -21,8 +21,6 @@ export const build = async (
 		await import("../assets/textures/pisa/nz.png"),
 	])
 
-	console.log(scene.background)
-
 	const dialectricParams = {
 		metalness: 0.5,
 		color: 0xed1c1c,
@@ -38,14 +36,20 @@ export const build = async (
 	const carModel = await loadObj(await import("../assets/models/mazda787b.obj"))
 	carModel.receiveShadow = true
 	carModel.castShadow = true
+	let min = new THREE.Vector3(Infinity, Infinity, Infinity)
+	let max = new THREE.Vector3(-Infinity, -Infinity, -Infinity)
 	carModel.traverse(x => {
 		if (x instanceof THREE.Mesh) {
 			x.material = carMaterial
+			x.geometry.computeBoundingBox()
+			min.min(x.geometry.boundingBox.min)
+			max.max(x.geometry.boundingBox.max)
 		}
 	})
+	const bb = max.sub(min)
 
 	const carBB = new THREE.Mesh(
-		new THREE.WireframeGeometry(new THREE.CubeGeometry(4.7, 2, 1, 1)),
+		new THREE.WireframeGeometry(new THREE.CubeGeometry(bb.z, bb.x, bb.y)),
 		new THREE.MeshBasicMaterial({
 			color: 0xff0000,
 			wireframe: true,

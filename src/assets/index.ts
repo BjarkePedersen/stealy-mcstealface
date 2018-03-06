@@ -8,7 +8,7 @@ export const assets = Promise.all(
 	keys(sources).map(
 		name =>
 			new Promise<{ img: HTMLImageElement; name: keyof typeof sources }>(
-				(res, rej) => {
+				res => {
 					const img = new Image()
 					img.src = sources[name]
 					img.onload = () => res({ img, name })
@@ -57,5 +57,3 @@ export const drawFromIndex = (atlas: Atlas, index: number) => (
 	const { x, y, w, h } = getCoordsForIndex(atlas, index)
 	ctx.drawImage(atlas.image, x, y, w, h, dx, dy, dw, dh)
 }
-
-assets.then(wow => console.log({ wow }))

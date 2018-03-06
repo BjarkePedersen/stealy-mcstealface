@@ -1,4 +1,4 @@
-import { Vec2, add, dot, mul, perpendicular, rotate, sub } from "./misc"
+import { Vec2, add, dot, normalize, perpendicular, rotate, sub } from "./misc"
 
 export interface Rectangle {
 	x: number
@@ -28,14 +28,14 @@ export const getEdges = (a: Rectangle): Vec2[] => {
 
 const getAxes = (a: Shape): Vec2[] =>
 	a.map((edge, i, edges) =>
-		perpendicular(sub(edge, edges[(i + 1) % edges.length])),
+		normalize(perpendicular(sub(edges[(i + 1) % edges.length], edge))),
 	)
 
 const project = (a: Shape, axis: Vec2): Vec2 => {
 	let min = dot(axis, a[0])
 	let max = min
-	for (const vert of a) {
-		const p = dot(axis, vert)
+	for (let i = 1; i < a.length; i++) {
+		const p = dot(axis, a[i])
 		if (p < min) {
 			min = p
 		} else if (p > max) {
@@ -56,7 +56,11 @@ const getOverlap = ([x0, y0]: Vec2, [x1, y1]: Vec2): number => {
 	return amax < bmax ? amax - bmin : bmax - amin
 }
 
-export const sat = (a: Shape, b: Shape) => {
+// Note(oeb25): Reference http://www.dyn4j.org/2010/01/sat/
+
+export type SatResult = { direction: Vec2; t: number }
+
+export const sat = (a: Shape, b: Shape): false | SatResult => {
 	let overlap = Infinity
 	let smallest: Vec2 | null = null
 
@@ -77,5 +81,5 @@ export const sat = (a: Shape, b: Shape) => {
 		}
 	}
 
-	return [smallest, overlap] as [Vec2 | null, number]
+	return { direction: smallest!, t: overlap }
 }
