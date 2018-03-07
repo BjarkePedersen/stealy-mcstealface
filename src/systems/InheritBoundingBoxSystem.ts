@@ -20,7 +20,7 @@ export const InheritBoundingBoxSystem = new System(
 	({ boundingbox, renderable, position }) => {
 		const model = renderable.object
 		model.position.x = position.position[0]
-		model.position.y = -position.position[1]
+		model.position.z = position.position[1]
 		let min = new THREE.Vector3(Infinity, Infinity, Infinity)
 		let max = new THREE.Vector3(-Infinity, -Infinity, -Infinity)
 		model.traverse(x => {
@@ -35,8 +35,8 @@ export const InheritBoundingBoxSystem = new System(
 		const rect: Rectangle = {
 			x: position.position[0],
 			y: position.position[1],
-			width: bb.z,
-			height: bb.y,
+			width: bb.x,
+			height: bb.z,
 			rotation: 0,
 		}
 

@@ -76,9 +76,9 @@ export const CarSystem = new System(
 		boundingbox.center = position.position
 
 		renderable.object.position.x = position.position[0]
-		renderable.object.position.y = -position.position[1]
-		renderable.object.position.z = 0.5
-		renderable.object.rotation.z = -dir(steering.direction)
+		renderable.object.position.y = 0.5
+		renderable.object.position.z = position.position[1]
+		renderable.object.rotation.y = -dir(steering.direction)
 		return
 	},
 )

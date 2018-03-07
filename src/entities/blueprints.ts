@@ -44,7 +44,7 @@ const buildCarModel = async (ctx: {
 	const bb = max.sub(min)
 
 	const carBB = new THREE.Mesh(
-		new THREE.WireframeGeometry(new THREE.CubeGeometry(bb.z, bb.x, bb.y)),
+		new THREE.WireframeGeometry(new THREE.CubeGeometry(bb.z, bb.y, bb.x)),
 		new THREE.MeshBasicMaterial({
 			color: 0xff0000,
 			wireframe: true,

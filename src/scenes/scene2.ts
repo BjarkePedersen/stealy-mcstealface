@@ -92,7 +92,7 @@ export const build = async (ctx: {
 			),
 		),
 	])
-	playerChild.renderable.object.rotateX(Math.PI / 2)
+	playerChild.renderable.object.position.y = 0.5
 
 	const block = system.createEntity([
 		new Position(),
@@ -100,7 +100,7 @@ export const build = async (ctx: {
 		new BoundingBox(),
 		new Renderable(
 			new THREE.Mesh(
-				new THREE.CubeGeometry(10, 5, 10),
+				new THREE.CubeGeometry(10, 10, 5),
 				new THREE.MeshPhongMaterial({
 					color: 0xffffff,
 					specular: 0xffffff,
@@ -112,8 +112,7 @@ export const build = async (ctx: {
 			),
 		),
 	])
-	block.renderable.object.position.z = 5
-	playerChild.renderable.object.rotateX(Math.PI / 2)
+	block.renderable.object.position.y = 5
 	block.position.position[0] = -10
 
 	const player = system.createEntity([

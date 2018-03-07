@@ -20,10 +20,10 @@ export const CameraTrackingSystem = new System(
 				dt * 10.0,
 				sub(carP, scale(unitVel, 5)),
 			)
-			cam.up = new THREE.Vector3(0, 0, 1)
-			cam.lookAt(new THREE.Vector3(carP[0], -carP[1], 0))
+			cam.up = new THREE.Vector3(0, 1, 0)
+			cam.lookAt(new THREE.Vector3(carP[0], 0, carP[1]))
 			cam.position.lerp(
-				new THREE.Vector3(position.position[0], -position.position[1], 3),
+				new THREE.Vector3(position.position[0], 3, position.position[1]),
 				dt * 10,
 			)
 		} else {
@@ -32,14 +32,14 @@ export const CameraTrackingSystem = new System(
 			const childP = child.position.getPosition()
 
 			const camP = add(childP, [0, 10])
-			cam.position.lerp(new THREE.Vector3(camP[0], -camP[1], 10), dt * 10)
+			cam.position.lerp(new THREE.Vector3(camP[0], 10, camP[1]), dt * 10)
 
 			const dum = new THREE.Camera()
 			dum.position.x = cam.position.x
 			dum.position.y = cam.position.y
 			dum.position.z = cam.position.z
 
-			dum.lookAt(new THREE.Vector3(childP[0], -childP[1], 0))
+			dum.lookAt(new THREE.Vector3(childP[0], 0, childP[1]))
 
 			cam.quaternion.slerp(dum.quaternion, dt * 10)
 		}

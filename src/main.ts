@@ -89,7 +89,7 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 	groundMat.color.setHSL(0.095, 1, 0.75)
 
 	const ground = new THREE.Mesh(groundGeo, groundMat)
-	// ground.rotation.x = -Math.PI / 2
+	ground.rotation.x = -Math.PI / 2
 	ground.position.z = 0
 	scene.add(ground)
 
@@ -150,7 +150,7 @@ const main = async () => {
 		new Promise<THREE.Group>(res =>
 			loader.load(path, group => {
 				const g = new THREE.Group()
-				group.rotation.x = group.rotation.y = Math.PI / 2
+				group.rotation.y = Math.PI / 2
 				group.traverse(x => {
 					x.castShadow = true
 					x.receiveShadow = true
