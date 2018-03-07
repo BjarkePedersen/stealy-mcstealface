@@ -7,13 +7,13 @@ import { System } from "."
 
 export const CameraTrackingSystem = new System(
 	[Camera.key, Position.key],
-	async ({ camera, position }, { dt }) => {
+	({ camera, position }, { dt }) => {
 		const cam = camera.camera
 		let toFollow = camera.track
-		const car = await toFollow.player.getCar()
+		const car = toFollow.player.getCar()
 		if (car) {
-			const carV = await car.velocity.getVelocity()
-			const carP = await car.position.getPosition()
+			const carV = car.velocity.getVelocity()
+			const carP = car.position.getPosition()
 			const unitVel = normalize(carV)
 			position.position = lerp(
 				position.position,
@@ -27,9 +27,9 @@ export const CameraTrackingSystem = new System(
 				dt * 10,
 			)
 		} else {
-			const child = await toFollow.player.getChild()
+			const child = toFollow.player.getChild()
 
-			const childP = await child.position.getPosition()
+			const childP = child.position.getPosition()
 
 			const camP = add(childP, [0, 10])
 			cam.position.lerp(new THREE.Vector3(camP[0], -camP[1], 10), dt * 10)
@@ -43,14 +43,6 @@ export const CameraTrackingSystem = new System(
 
 			cam.quaternion.slerp(dum.quaternion, dt * 10)
 		}
-		// } else {
-		// 	entity.camera = lerp(entity.camera, dt, add(toFollow.position, [0, 10]))
-		// 	cam.position.x = entity.camera[0]
-		// 	cam.position.y = -entity.camera[1]
-		// }
-		// for (const child of entity.children) {
-		// 	renderEntity(entities.lookUpEntity(child), entities, [0, 0])
-		// }
 		return
 	},
 )

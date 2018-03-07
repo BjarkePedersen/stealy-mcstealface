@@ -13,7 +13,7 @@ const entityId = Symbol("entity id")
 
 type FunctionPropertyNames<T> = T extends any
 	? {
-			[K in keyof T]: T[K] extends (...args: any[]) => Promise<any> ? K : never
+			[K in keyof T]: T[K] extends (...args: any[]) => any ? K : never
 	  }[keyof T]
 	: never
 
@@ -27,11 +27,10 @@ type F<T extends Components> = {
 // Facade interface
 export type EntityReference<T extends Components> = {
 	itsa: "reference"
-	// imposible: T
 	[entityId]: EntityId
 } & F<T>
 
-export const referenceToSame = <T extends Components, S extends Components>(
+export const isReferenceToSame = <T extends Components, S extends Components>(
 	a: EntityReference<T>,
 	b: EntityReference<S>,
 ) => a[entityId] == b[entityId]
@@ -68,10 +67,9 @@ export class EntitySystem<T extends keyof ComponentMap> {
 		return new EntitySystem((this.components as (T | S)[]).concat(components))
 	}
 
-	// createEntity = <S extends InstanceType<T>>(components: S[]) => {
 	createEntity = <S extends ComponentMap[T]>(
 		components: S[],
-	): EntityReference<S> => {
+	): Entity<S["key"]> => {
 		const id = this.allocId()
 
 		for (const component of components) {
@@ -81,7 +79,7 @@ export class EntitySystem<T extends keyof ComponentMap> {
 
 		this.entities.push(id)
 
-		return this.ref(this.buildEntity(id))
+		return this.buildEntity(id) as Entity<S["key"]>
 	}
 
 	registerSystem = <S extends T>(system: System<S>) => {
@@ -102,9 +100,7 @@ export class EntitySystem<T extends keyof ComponentMap> {
 		)
 	}
 
-	update = async (inputs: Inputs, dt: number) => {
-		const updaters = []
-
+	update = (inputs: Inputs, dt: number) => {
 		for (const system of this.systems) {
 			for (const entity of this.entities) {
 				const hadAll = system.components.reduce(
@@ -113,18 +109,14 @@ export class EntitySystem<T extends keyof ComponentMap> {
 					true,
 				)
 				if (hadAll)
-					updaters.push(
-						system.handler(this.buildEntity(entity), {
-							inputs,
-							dt,
-							ref: this.ref as any,
-							queryByComponents: this.queryByComponents,
-						}),
-					)
+					system.handler(this.buildEntity(entity), {
+						inputs,
+						dt,
+						ref: this.ref as any,
+						queryByComponents: this.queryByComponents,
+					})
 			}
 		}
-
-		return Promise.all(updaters)
 	}
 
 	buildEntity = (id: EntityId): Entity<T> => {
@@ -155,15 +147,4 @@ export class EntitySystem<T extends keyof ComponentMap> {
 
 		return result as EntityReference<ComponentMap[S]>[]
 	}
-
-	// message = async <S extends T>(
-	// 	ref: EntityReference<ComponentMap[S]>,
-	// 	component: S,
-	// 	message: ComponentMap[S]["inbox"][number],
-	// ) => {
-	// 	const c = (this.arena[component] as Map<EntityId, ComponentMap[S]>).get(
-	// 		ref[entityId],
-	// 	)!
-	// 	;((c.inbox as any) as any[]).push(message)
-	// }
 }

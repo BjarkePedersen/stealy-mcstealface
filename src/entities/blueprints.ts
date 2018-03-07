@@ -2,6 +2,7 @@ import * as THREE from "three"
 
 import {
 	BoundingBox,
+	CollisionResponse,
 	Position,
 	Renderable,
 	Steering,
@@ -11,6 +12,7 @@ import {
 const buildCarModel = async (ctx: {
 	loadObj: (path: string) => Promise<THREE.Group>
 	loadCubeMap: (files: string[]) => Promise<THREE.CubeTexture>
+	envMap: THREE.CubeTexture
 }) => {
 	const dialectricParams = {
 		metalness: 0.5,
@@ -19,7 +21,7 @@ const buildCarModel = async (ctx: {
 		clearCoatRoughness: 0.01,
 		reflectivity: 1.0, // Always keep on 1
 		roughness: 0.4, // Always keep on 1
-		// envMap: scene.background,
+		envMap: ctx.envMap,
 	}
 
 	const carMaterial = new THREE.MeshPhysicalMaterial(dialectricParams)
@@ -57,10 +59,12 @@ const buildCarModel = async (ctx: {
 export const carBlueprint = async (ctx: {
 	loadObj: (path: string) => Promise<THREE.Group>
 	loadCubeMap: (files: string[]) => Promise<THREE.CubeTexture>
+	envMap: THREE.CubeTexture
 }) => [
 	new Position(),
 	new Velocity(),
 	new Steering(),
 	new BoundingBox(),
 	new Renderable(await buildCarModel(ctx)),
+	new CollisionResponse(),
 ]

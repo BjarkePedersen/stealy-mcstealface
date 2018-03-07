@@ -1,8 +1,8 @@
-import { EntityReference, referenceToSame } from "../entities/next"
+import { EntityReference, isReferenceToSame } from "../entities/next"
+import { Vec2, add } from "../misc"
 
 import { Object3D } from "three"
 import { Shape } from "../intersections"
-import { Vec2 } from "../misc"
 
 export interface Component<K> {
 	readonly key: K
@@ -11,8 +11,8 @@ export interface Component<K> {
 export class Position implements Component<"position"> {
 	static key = "position" as "position"
 	readonly key = Position.key
-	getPosition = async () => this.position
-	setPosition = async (position: Vec2) => {
+	getPosition = () => this.position
+	setPosition = (position: Vec2) => {
 		this.position = position
 	}
 	position: Vec2 = [0, 0]
@@ -21,8 +21,8 @@ export class Position implements Component<"position"> {
 export class Velocity implements Component<"velocity"> {
 	static key = "velocity" as "velocity"
 	readonly key = Velocity.key
-	getVelocity = async () => this.velocity
-	setVelocity = async (velocity: Vec2) => {
+	getVelocity = () => this.velocity
+	setVelocity = (velocity: Vec2) => {
 		this.velocity = velocity
 	}
 	velocity: Vec2 = [0, 0]
@@ -37,14 +37,14 @@ export class Steering implements Component<"steering"> {
 	static key = "steering" as "steering"
 	readonly key = Steering.key
 
-	enter = async (passenger: NonNullable<Steering["passenger"]>) => {
+	enter = (passenger: NonNullable<Steering["passenger"]>) => {
 		if (this.passenger) return false
 		this.passenger = passenger
 		return true
 	}
 
-	leave = async (passenger: NonNullable<Steering["passenger"]>) => {
-		if (this.passenger && referenceToSame(this.passenger, passenger)) {
+	leave = (passenger: NonNullable<Steering["passenger"]>) => {
+		if (this.passenger && isReferenceToSame(this.passenger, passenger)) {
 			this.passenger = void 0
 			this.steering = 0
 			this.gas = 0
@@ -53,15 +53,15 @@ export class Steering implements Component<"steering"> {
 		return false
 	}
 
-	setGas = async (amount: number) => {
+	setGas = (amount: number) => {
 		this.gas = Math.max(-1, Math.min(1, amount))
 	}
 
-	steer = async (direction: number) => {
+	steer = (direction: number) => {
 		this.steering = Math.max(-1, Math.min(1, direction))
 	}
 
-	getDirection = async () => this.direction
+	getDirection = () => this.direction
 
 	steering = 0
 	gas = 0
@@ -72,6 +72,11 @@ export class Steering implements Component<"steering"> {
 export class BoundingBox implements Component<"boundingbox"> {
 	static key = "boundingbox" as "boundingbox"
 	readonly key = BoundingBox.key
+	getShape = () => this.shape
+	getCenter = () => this.center
+	translate = (by: Vec2) => {
+		this.shape = this.shape.map(v => add(v, by))
+	}
 	shape: Shape = []
 	center: Vec2 = [0, 0]
 }
@@ -83,10 +88,10 @@ export class Player implements Component<"player"> {
 	car?: EntityReference<Steering | Position | Velocity>
 	child: EntityReference<Position | Velocity>
 
-	getCar = async () => this.car
-	getChild = async () => this.child
+	getCar = () => this.car
+	getChild = () => this.child
 
-	enterCar = async (car: NonNullable<Player["car"]>) => {
+	enterCar = (car: NonNullable<Player["car"]>) => {
 		this.car = car
 	}
 
@@ -99,7 +104,7 @@ export class Renderable implements Component<"renderable"> {
 	static key = "renderable" as "renderable"
 	readonly key = Renderable.key
 
-	getObject = async () => this.object
+	getObject = () => this.object
 
 	object: Object3D
 
@@ -121,6 +126,13 @@ export class Camera implements Component<"camera"> {
 	}
 }
 
+export class CollisionResponse implements Component<"collisionResponse"> {
+	static key = "collisionResponse" as "collisionResponse"
+	readonly key = CollisionResponse.key
+
+	collisions: Vec2[] = []
+}
+
 type x<T extends { key: string }> = { [K in T["key"]]: T }
 
 export type ComponentMap = x<Position> &
@@ -130,5 +142,6 @@ export type ComponentMap = x<Position> &
 	x<Player> &
 	x<Passenger> &
 	x<Renderable> &
-	x<Camera>
+	x<Camera> &
+	x<CollisionResponse>
 export type Components = ComponentMap[keyof ComponentMap]

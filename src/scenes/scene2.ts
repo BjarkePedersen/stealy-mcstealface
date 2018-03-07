@@ -4,6 +4,7 @@ import * as blueprints from "../entities/blueprints"
 import {
 	BoundingBox,
 	Camera,
+	CollisionResponse,
 	Passenger,
 	Player,
 	Position,
@@ -15,15 +16,24 @@ import {
 import { CameraTrackingSystem } from "../systems/CameraTrackingSystem"
 import { CarSystem } from "../systems/CarSystem"
 import { EntitySystem } from "../entities/next"
-import { Inputs } from "../inputs"
 import { PhysicsSystem } from "../systems/PhysicsSystem"
 import { PlayerSystem } from "../systems/PlayerSystem"
 
 export const build = async (ctx: {
 	camera: THREE.Camera
+	scene: THREE.Scene
 	loadObj: (path: string) => Promise<THREE.Group>
 	loadCubeMap: (files: string[]) => Promise<THREE.CubeTexture>
 }) => {
+	ctx.scene.background = await ctx.loadCubeMap([
+		await import("../assets/textures/pisa/px.png"),
+		await import("../assets/textures/pisa/nx.png"),
+		await import("../assets/textures/pisa/py.png"),
+		await import("../assets/textures/pisa/ny.png"),
+		await import("../assets/textures/pisa/pz.png"),
+		await import("../assets/textures/pisa/nz.png"),
+	])
+
 	const system = new EntitySystem([
 		Velocity.key,
 		Position.key,
@@ -33,6 +43,7 @@ export const build = async (ctx: {
 		Passenger.key,
 		Renderable.key,
 		Camera.key,
+		CollisionResponse.key,
 	])
 
 	system.registerSystem(CarSystem)
@@ -40,7 +51,21 @@ export const build = async (ctx: {
 	system.registerSystem(PhysicsSystem)
 	system.registerSystem(CameraTrackingSystem)
 
-	const car = system.createEntity(await blueprints.carBlueprint(ctx))
+	system.createEntity(
+		await blueprints.carBlueprint({
+			loadCubeMap: ctx.loadCubeMap,
+			loadObj: ctx.loadObj,
+			envMap: ctx.scene.background,
+		}),
+	)
+	const car2 = system.createEntity(
+		await blueprints.carBlueprint({
+			loadCubeMap: ctx.loadCubeMap,
+			loadObj: ctx.loadObj,
+			envMap: ctx.scene.background,
+		}),
+	)
+	car2.position.position = [10, 2]
 
 	const playerChild = system.createEntity([
 		new Position(),
@@ -60,24 +85,14 @@ export const build = async (ctx: {
 		),
 	])
 
-	const player = system.createEntity([new Player(playerChild), new Passenger()])
-	const camera = system.createEntity([
-		new Camera(ctx.camera, player),
+	const player = system.createEntity([
+		new Player(system.ref(playerChild)),
+		new Passenger(),
+	])
+	system.createEntity([
+		new Camera(ctx.camera, system.ref(player)),
 		new Position(),
 	])
-	await car.steering.enter(player)
-	await player.player.enterCar(car)
-	// ;(async () => {
-	// 	const inputs = new Inputs(document.body)
-	// 	const dt = 0.16
-	await car.steering.setGas(0.1)
-
-	// 	// await system.update(inputs, dt)
-	// 	// await system.update(inputs, dt)
-	// 	// car.steering.enter(player)
-	// 	// await system.update(inputs, dt)
-	// 	// await system.update(inputs, dt)
-	// })()
 
 	return system
 }

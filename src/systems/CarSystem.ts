@@ -1,5 +1,6 @@
 import {
 	BoundingBox,
+	CollisionResponse,
 	Position,
 	Renderable,
 	Steering,
@@ -11,9 +12,23 @@ import { add, dir, dot, len, lerp, normalize, polar, scale } from "../misc"
 import { System } from "."
 
 export const CarSystem = new System(
-	[Velocity.key, Position.key, Steering.key, BoundingBox.key, Renderable.key],
-	async (car, { dt }) => {
-		const { position, steering, velocity, boundingbox, renderable } = car
+	[
+		Velocity.key,
+		Position.key,
+		Steering.key,
+		BoundingBox.key,
+		Renderable.key,
+		CollisionResponse.key,
+	],
+	(car, { dt }) => {
+		const {
+			position,
+			steering,
+			velocity,
+			boundingbox,
+			renderable,
+			collisionResponse,
+		} = car
 
 		const TURN_SPEED = 0.3
 		const TURN_DRAG = 0.99
@@ -43,6 +58,10 @@ export const CarSystem = new System(
 			),
 			scale(wheels, steering.gas * ACCELERATION_SPEED * dt),
 		)
+		let collision
+		while ((collision = collisionResponse.collisions.pop())) {
+			velocity.velocity = scale(velocity.velocity, 0.9)
+		}
 		position.position = add(position.position, velocity.velocity)
 
 		// Note(oeb25): Do bounding box update

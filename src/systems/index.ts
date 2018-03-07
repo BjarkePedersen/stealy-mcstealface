@@ -17,11 +17,11 @@ export class System<
 	C extends keyof ComponentMap = keyof ComponentMap
 > {
 	components: T[]
-	handler: (entity: Entity<T>, context: SystemContext<C>) => Promise<void>
+	handler: (entity: Entity<T>, context: SystemContext<C>) => void
 
 	constructor(
 		components: T[],
-		handler: (entity: Entity<T>, context: SystemContext<C>) => Promise<void>,
+		handler: (entity: Entity<T>, context: SystemContext<C>) => void,
 	) {
 		this.components = components
 		this.handler = handler
