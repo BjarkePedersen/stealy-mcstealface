@@ -14,7 +14,7 @@ const buildCarModel = async (ctx: {
 	loadCubeMap: (files: string[]) => Promise<THREE.CubeTexture>
 	envMap: THREE.CubeTexture
 }) => {
-	const dialectricParams = {
+	const carMaterial = new THREE.MeshPhysicalMaterial({
 		metalness: 0.5,
 		color: 0xed1c1c,
 		clearCoat: 1, // Always keep on 1
@@ -22,9 +22,7 @@ const buildCarModel = async (ctx: {
 		reflectivity: 1.0, // Always keep on 1
 		roughness: 0.4, // Always keep on 1
 		envMap: ctx.envMap,
-	}
-
-	const carMaterial = new THREE.MeshPhysicalMaterial(dialectricParams)
+	})
 
 	const carModel = await ctx.loadObj(
 		await import("../assets/models/mazda787b.obj"),

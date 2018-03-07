@@ -82,11 +82,17 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 // GROUND
 {
 	const groundGeo = new THREE.PlaneBufferGeometry(10000, 10000)
-	const groundMat = new THREE.MeshPhongMaterial({
-		color: 0xffffff,
-		specular: 0x050505,
+
+	const groundMat = new THREE.MeshPhysicalMaterial({
+		metalness: 0,
+		color: 0x333333,
+		clearCoat: 1, // Always keep on 1
+		clearCoatRoughness: 0.9,
+		reflectivity: 1.0, // Always keep on 1
+		roughness: 0.9,
+		// envMap: ctx.envMap,
 	})
-	groundMat.color.setHSL(0.095, 1, 0.75)
+	// groundMat.color.setHSL(0.095, 1, 0.75)
 
 	const ground = new THREE.Mesh(groundGeo, groundMat)
 	ground.rotation.x = -Math.PI / 2
