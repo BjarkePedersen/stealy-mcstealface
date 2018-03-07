@@ -23,9 +23,9 @@ const createRenderer3d = () => {
 		canvas:
 			(document.querySelector("#gameCanvas") as HTMLCanvasElement) || void 0,
 	})
+
 	renderer.gammaInput = true
 	renderer.gammaOutput = true
-	// renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	renderer.domElement.id = "gameCanvas"
 	document.body.appendChild(renderer.domElement)
@@ -65,7 +65,7 @@ const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6)
 	//Set up shadow properties for the light
 	dirLight.shadow.mapSize.width = 4096
 	dirLight.shadow.mapSize.height = 4096
-	dirLight.shadow.bias = -0.0001
+	dirLight.shadow.bias = -0.00001
 	dirLight.shadow.radius = 1
 
 	var d = 50
