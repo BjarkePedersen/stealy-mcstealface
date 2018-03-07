@@ -76,6 +76,7 @@ export class BoundingBox implements Component<"boundingbox"> {
 	getCenter = () => this.center
 	translate = (by: Vec2) => {
 		this.shape = this.shape.map(v => add(v, by))
+		this.center = add(this.center, by)
 	}
 	shape: Shape = []
 	center: Vec2 = [0, 0]
@@ -133,6 +134,12 @@ export class CollisionResponse implements Component<"collisionResponse"> {
 	collisions: Vec2[] = []
 }
 
+export class InheritBoundingBoxFromRenderable
+	implements Component<"inheritBoundingBoxFromRenderable"> {
+	static key = "inheritBoundingBoxFromRenderable" as "inheritBoundingBoxFromRenderable"
+	readonly key = InheritBoundingBoxFromRenderable.key
+}
+
 type x<T extends { key: string }> = { [K in T["key"]]: T }
 
 export type ComponentMap = x<Position> &
@@ -143,5 +150,7 @@ export type ComponentMap = x<Position> &
 	x<Passenger> &
 	x<Renderable> &
 	x<Camera> &
-	x<CollisionResponse>
+	x<CollisionResponse> &
+	x<InheritBoundingBoxFromRenderable>
+
 export type Components = ComponentMap[keyof ComponentMap]

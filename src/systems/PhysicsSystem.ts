@@ -15,6 +15,7 @@ export const PhysicsSystem = new System(
 	(self, { dt, queryByComponents, ref }) => {
 		const { position, velocity, boundingbox, collisionResponse } = self
 		position.position = add(position.position, scale(velocity.velocity, dt))
+		boundingbox.translate(scale(velocity.velocity, dt))
 
 		const others = queryByComponents([BoundingBox.key]).filter(
 			x => !isReferenceToSame(x, ref(self)),

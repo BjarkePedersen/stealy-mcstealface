@@ -20,10 +20,11 @@ export const lerp = ([x0, y0]: Vec2, t: number, [x1, y1]: Vec2): Vec2 => [
 	y0 + t * (y1 - y0),
 ]
 export const len = ([x, y]: Vec2): number => Math.sqrt(x * x + y * y)
+export const lenSq = ([x, y]: Vec2): number => x * x + y * y
 export const abs = ([x, y]: Vec2): Vec2 => [Math.abs(x), Math.abs(y)]
 export const normalize = (a: Vec2): Vec2 => {
 	const l = len(a)
-	return l == 0 ? [0, 0] : scale(a, 1 / len(a))
+	return l == 0 ? a : scale(a, 1 / l)
 }
 export const setLen = (a: Vec2, length: number): Vec2 =>
 	scale(a, length / len(a))
@@ -41,3 +42,4 @@ export const rotate = ([x, y]: Vec2, radian: number): Vec2 => {
 	return [cos * x - sin * y, sin * x + cos * y]
 }
 export const perpendicular = ([x, y]: Vec2): Vec2 => [-y, x]
+export const perpendicular2 = ([x, y]: Vec2): Vec2 => [y, -x]

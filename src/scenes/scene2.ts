@@ -5,6 +5,7 @@ import {
 	BoundingBox,
 	Camera,
 	CollisionResponse,
+	InheritBoundingBoxFromRenderable,
 	Passenger,
 	Player,
 	Position,
@@ -16,6 +17,7 @@ import {
 import { CameraTrackingSystem } from "../systems/CameraTrackingSystem"
 import { CarSystem } from "../systems/CarSystem"
 import { EntitySystem } from "../entities/next"
+import { InheritBoundingBoxSystem } from "../systems/InheritBoundingBoxSystem"
 import { PhysicsSystem } from "../systems/PhysicsSystem"
 import { PlayerSystem } from "../systems/PlayerSystem"
 
@@ -44,20 +46,23 @@ export const build = async (ctx: {
 		Renderable.key,
 		Camera.key,
 		CollisionResponse.key,
+		InheritBoundingBoxFromRenderable.key,
 	])
 
-	system.registerSystem(CarSystem)
 	system.registerSystem(PlayerSystem)
+	system.registerSystem(CarSystem)
+	system.registerSystem(InheritBoundingBoxSystem)
 	system.registerSystem(PhysicsSystem)
 	system.registerSystem(CameraTrackingSystem)
 
-	system.createEntity(
+	const car1 = system.createEntity(
 		await blueprints.carBlueprint({
 			loadCubeMap: ctx.loadCubeMap,
 			loadObj: ctx.loadObj,
 			envMap: ctx.scene.background,
 		}),
 	)
+	car1.position.position = [10, -2]
 	const car2 = system.createEntity(
 		await blueprints.carBlueprint({
 			loadCubeMap: ctx.loadCubeMap,
@@ -70,6 +75,9 @@ export const build = async (ctx: {
 	const playerChild = system.createEntity([
 		new Position(),
 		new Velocity(),
+		new InheritBoundingBoxFromRenderable(),
+		new CollisionResponse(),
+		new BoundingBox(),
 		new Renderable(
 			new THREE.Mesh(
 				new THREE.CylinderGeometry(0.5, 0.5, 1, 100),
@@ -84,6 +92,29 @@ export const build = async (ctx: {
 			),
 		),
 	])
+	playerChild.renderable.object.rotateX(Math.PI / 2)
+
+	const block = system.createEntity([
+		new Position(),
+		new InheritBoundingBoxFromRenderable(),
+		new BoundingBox(),
+		new Renderable(
+			new THREE.Mesh(
+				new THREE.CubeGeometry(10, 5, 10),
+				new THREE.MeshPhongMaterial({
+					color: 0xffffff,
+					specular: 0xffffff,
+					shininess: 20,
+					morphTargets: true,
+					vertexColors: THREE.FaceColors,
+					flatShading: true,
+				}),
+			),
+		),
+	])
+	block.renderable.object.position.z = 5
+	playerChild.renderable.object.rotateX(Math.PI / 2)
+	block.position.position[0] = -10
 
 	const player = system.createEntity([
 		new Player(system.ref(playerChild)),

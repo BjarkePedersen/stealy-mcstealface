@@ -61,6 +61,8 @@ const getOverlap = ([x0, y0]: Vec2, [x1, y1]: Vec2): number => {
 export type SatResult = { direction: Vec2; t: number }
 
 export const sat = (a: Shape, b: Shape): false | SatResult => {
+	if (a.length == 0 || b.length == 0) return false
+
 	let overlap = Infinity
 	let smallest: Vec2 | null = null
 

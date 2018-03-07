@@ -1,5 +1,5 @@
 import { Passenger, Player, Position, Steering, Velocity } from "../components"
-import { add, len, normalize, scale, sub } from "../misc"
+import { add, len, normalize, perpendicular2, scale, sub } from "../misc"
 
 import { EntityReference } from "../entities/next"
 import { System } from "."
@@ -20,7 +20,7 @@ export const PlayerSystem = new System(
 				const carPosition = player.car.position.getPosition()
 				player.car.steering.leave(ref(entity))
 				player.car = void 0
-				const unitVel = normalize(carDirection)
+				const unitVel = perpendicular2(scale(normalize(carDirection), 2))
 				player.child.position.setPosition(add(carPosition, unitVel))
 				return
 			}
@@ -35,17 +35,17 @@ export const PlayerSystem = new System(
 			return
 		}
 
-		const velocity = scale(
-			[
+		let velocity = scale(
+			normalize([
 				(inputs.isDown("A") ? -1 : 0) + (inputs.isDown("D") ? 1 : 0),
 				(inputs.isDown("W") ? -1 : 0) + (inputs.isDown("S") ? 1 : 0),
-			],
-			10 * dt,
+			]),
+			1000 * dt,
 		)
-		const childP = player.child.position.getPosition()
-		player.child.position.setPosition(add(childP, velocity))
+		player.child.velocity.setVelocity(velocity)
 
 		if (inputs.wasPressed("ENTER")) {
+			const childP = player.child.position.getPosition()
 			const closestCar = queryByComponents([
 				Position.key,
 				Velocity.key,

@@ -30,9 +30,9 @@ export const CarSystem = new System(
 			collisionResponse,
 		} = car
 
-		const TURN_SPEED = 0.3
+		const TURN_SPEED = 0.03
 		const TURN_DRAG = 0.99
-		const ACCELERATION_SPEED = 0.2
+		const ACCELERATION_SPEED = 10
 
 		const face = dot(steering.direction, normalize(velocity.velocity))
 
@@ -62,7 +62,6 @@ export const CarSystem = new System(
 		while ((collision = collisionResponse.collisions.pop())) {
 			velocity.velocity = scale(velocity.velocity, 0.9)
 		}
-		position.position = add(position.position, velocity.velocity)
 
 		// Note(oeb25): Do bounding box update
 
