@@ -1,22 +1,10 @@
 import * as THREE from "three"
 import * as asstes from "../assets"
+import * as car from "./car"
 
 import { EntityReference, EntitySystem, EntityType, ref } from "./entity-system"
-import {
-	Omit,
-	Vec2,
-	add,
-	dir,
-	dot,
-	len,
-	lerp,
-	normalize,
-	polar,
-	scale,
-	sub,
-	unit,
-} from "../misc"
-import { Rectangle, SatResult, Shape, getEdges } from "../intersections"
+import { Optional, Vec2, add, len, scale, setLen, sub, unit } from "../misc"
+import { SatResult, Shape } from "../intersections"
 
 import { Inputs } from "../inputs"
 
@@ -33,42 +21,12 @@ export interface Player {
 		| {
 				name: "in-car"
 				child: EntityReference<Controlable>
-				vehiecle: EntityReference<Car>
+				vehiecle: EntityReference<car.Car>
 		  }
 		| {
 				name: "initial"
 				child: EntityReference<Controlable>
 		  }
-}
-
-export interface Car {
-	entityType: "car-entity"
-	model: THREE.Group
-
-	// The force produces by the motor
-	acceleration: number
-
-	// The steering done by the steering wheel in absolute radians
-	steering: number
-
-	// The direction the cars trunk is facing
-	direction: Vec2
-
-	velocity: Vec2
-	position: Vec2
-
-	boundingBox?: EntityReference<BoundingBox>
-}
-
-export const carBoundingBox = (car: Pick<Car, "position" | "direction">) => {
-	const rect: Rectangle = {
-		x: car.position[0],
-		y: car.position[1],
-		height: 2,
-		width: 4.7,
-		rotation: dir(car.direction),
-	}
-	return { shape: getEdges(rect), center: car.position }
 }
 
 export interface BoundingBox {
@@ -114,7 +72,7 @@ type x<T extends { entityType: string }> = { [K in T["entityType"]]: T }
 export type EntityMap = x<Controlable> &
 	x<Sprite> &
 	x<World> &
-	x<Car> &
+	x<car.Car> &
 	x<Player> &
 	x<BoundingBox>
 
@@ -128,9 +86,12 @@ export interface UpdateContext {
 	sat: (
 		bb: EntityType<BoundingBox>,
 	) => false | { result: SatResult; boundingBox: EntityType<BoundingBox> }
-	createEntity: <T extends keyof EntityMap, S = EntityMap[T]>(
+	createEntity: <
+		T extends keyof EntityMap,
+		S extends EntityMap[T] = EntityMap[T]
+	>(
 		entityType: T,
-		body: Omit<S, "entityType">,
+		body: Optional<S, "entityType">,
 	) => EntityType<S>
 	lookUpEntity: <T>(reference: EntityReference<T>) => EntityType<T>
 	entitiesWithType: <T extends keyof EntityMap>(
@@ -186,7 +147,7 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 						if (!closest || closest.dist > dist) return { dist, car }
 						return closest
 					},
-					void 0 as void | { car: EntityType<Car>; dist: number },
+					void 0 as void | { car: EntityType<car.Car>; dist: number },
 				)
 				if (closestCar && closestCar.dist < 2) {
 					entity.state = {
@@ -206,62 +167,7 @@ export const updateEntity = (entity: Entity, ctx: UpdateContext) => {
 			return
 		}
 		case "car-entity": {
-			const TURN_SPEED = 0.3
-			const TURN_DRAG = 0.99
-			const ACCELERATION_SPEED = 0.2
-
-			const face = dot(entity.direction, normalize(entity.velocity))
-
-			const angle =
-				dir(entity.direction) + entity.steering * TURN_SPEED * Math.sign(face)
-
-			const wheels = polar(angle, 1)
-
-			entity.direction = normalize(
-				lerp(entity.direction, len(entity.velocity) * TURN_SPEED, wheels),
-			)
-			const straight = Math.abs(face)
-			entity.velocity = add(
-				scale(
-					add(
-						scale(entity.velocity, TURN_DRAG * (1 - straight)),
-						scale(
-							entity.direction,
-							straight * len(entity.velocity) * (face > 0 ? 1 : -1),
-						),
-					),
-					0.99,
-				),
-				scale(wheels, entity.acceleration * ACCELERATION_SPEED * ctx.dt),
-			)
-			entity.position = add(entity.position, entity.velocity)
-
-			// Note(oeb25): Do bounding box update and collision
-
-			if (!entity.boundingBox) {
-				entity.boundingBox = ref(
-					ctx.createEntity("bounding-box", carBoundingBox(entity)),
-				)
-			} else {
-				ctx.lookUpEntity(entity.boundingBox).shape = carBoundingBox(
-					entity,
-				).shape
-			}
-			let result: ReturnType<typeof ctx.sat>
-			if ((result = ctx.sat(ctx.lookUpEntity(entity.boundingBox)))) {
-				const d = dot(
-					sub(entity.position, result.boundingBox.center),
-					scale(result.result.direction, result.result.t),
-				)
-				entity.position = add(
-					entity.position,
-					scale(result.result.direction, result.result.t * Math.sign(d)),
-				)
-				entity.velocity = scale(entity.velocity, 0.9)
-				ctx.lookUpEntity(entity.boundingBox).shape = carBoundingBox(
-					entity,
-				).shape
-			}
+			car.update(entity, ctx)
 			return
 		}
 	}

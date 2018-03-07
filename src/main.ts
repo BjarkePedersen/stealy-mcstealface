@@ -1,10 +1,12 @@
+import "./entities/next"
+
 import * as OBJLoader from "three-obj-loader"
 import * as THREE from "three"
 import * as scene1 from "./scenes/scene1"
+import * as scene2 from "./scenes/scene2"
 
 import {
 	BoundingBox,
-	Car,
 	Entities,
 	EntityType,
 	UpdateContext,
@@ -13,7 +15,9 @@ import {
 } from "./entities"
 import { Rectangle, SatResult, getEdges, sat } from "./intersections"
 
+import { Car } from "./entities/car"
 import { Inputs } from "./inputs"
+import { Renderable } from "./components"
 import { dir } from "./misc"
 import { renderEntity } from "./renderer-3d"
 
@@ -183,112 +187,129 @@ const main = async () => {
 			cubeMapLoader.load(files, texture => res(texture)),
 		)
 
-	const { world, models } = await scene1.build(
-		scene,
-		entities,
-		renderer3d.camera,
+	// const { world, models } = await scene1.build(
+	// 	scene,
+	// 	entities,
+	// 	renderer3d.camera,
+	// 	loadObj,
+	// 	loadCubeMap,
+	// 	material,
+	// )
+
+	// models.forEach(model => {
+	// 	model.castShadow = true
+	// 	model.receiveShadow = true
+	// 	scene.add(model)
+	// })
+
+	const system = await scene2.build({
 		loadObj,
 		loadCubeMap,
-		material,
-	)
-
-	models.forEach(model => {
-		model.castShadow = true
-		model.receiveShadow = true
-		scene.add(model)
+		camera: renderer3d.camera,
 	})
+
+	await Promise.all(
+		system.queryByComponents([Renderable.key]).map(async ({ renderable }) => {
+			const model = await renderable.getObject()
+			model.castShadow = true
+			model.receiveShadow = true
+			scene.add(model)
+		}),
+	)
 
 	renderer3d.renderer.gammaInput = true
 	renderer3d.renderer.gammaOutput = true
 	renderer3d.renderer.shadowMap.enabled = true
 
-	const updateCtx: UpdateContext = {
-		dt: 0,
-		inputs,
-		sat: bb => {
-			const others = entities.entitiesWithType("bounding-box", { not: ref(bb) })
-			return others.reduce<
-				false | { result: SatResult; boundingBox: EntityType<BoundingBox> }
-			>((smallest, other) => {
-				const result = sat(bb.shape, other.shape)
-				if (!result) return smallest
-				if (!smallest) return { result, boundingBox: other }
-				if (result.t < smallest.result.t) return { result, boundingBox: other }
-				return smallest
-			}, false)
-		},
-		createEntity: entities.createEntity,
-		lookUpEntity: entities.lookUpEntity,
-		entitiesWithType: entities.entitiesWithType,
-	}
+	// const updateCtx: UpdateContext = {
+	// 	dt: 0,
+	// 	inputs,
+	// 	sat: bb => {
+	// 		const others = entities.entitiesWithType("bounding-box", { not: ref(bb) })
+	// 		return others.reduce<
+	// 			false | { result: SatResult; boundingBox: EntityType<BoundingBox> }
+	// 		>((smallest, other) => {
+	// 			const result = sat(bb.shape, other.shape)
+	// 			if (!result) return smallest
+	// 			if (!smallest) return { result, boundingBox: other }
+	// 			if (result.t < smallest.result.t) return { result, boundingBox: other }
+	// 			return smallest
+	// 		}, false)
+	// 	},
+	// 	createEntity: entities.createEntity,
+	// 	lookUpEntity: entities.lookUpEntity,
+	// 	entitiesWithType: entities.entitiesWithType,
+	// }
 
 	const first = Date.now()
 	let last = first
-	const loop = () => {
+	const loop = async () => {
 		const now = Date.now()
 		// const t = now - first
 		const dt = (now - last) / 1000
 		last = now
 
-		updateCtx.dt = dt
+		await system.update(inputs, dt)
 
-		for (const entity of entities.entities) {
-			updateEntity(entity, updateCtx)
-		}
+		// updateCtx.dt = dt
 
-		const cars = entities.entities.filter(
-			e => e.entityType == "car-entity",
-		) as Car[]
+		// for (const entity of entities.entities) {
+		// 	updateEntity(entity, updateCtx)
+		// }
+
+		// const cars = entities.entities.filter(
+		// 	e => e.entityType == "car-entity",
+		// ) as Car[]
 
 		// ctx.restore()
-		ctx.clearRect(0, 0, debugCanvas.width, debugCanvas.height)
+		// ctx.clearRect(0, 0, debugCanvas.width, debugCanvas.height)
 		// ctx.save()
 		// ctx.translate(100, 0)
 		// ctx.scale(10, 10)
-		cars
-			.map(car => {
-				const rect: Rectangle = {
-					x: car.position[0],
-					y: car.position[1],
-					height: 2,
-					width: 4.7,
-					rotation: dir(car.direction),
-				}
-				return { car, edges: getEdges(rect), rect }
-			})
-			.map((self, i, cars) => {
-				const others = cars.filter((_, j) => i !== j)
-				ctx.beginPath()
-				ctx.moveTo(self.edges[0][0], self.edges[0][1])
-				ctx.lineTo(self.edges[1][0], self.edges[1][1])
-				ctx.lineTo(self.edges[2][0], self.edges[2][1])
-				ctx.lineTo(self.edges[3][0], self.edges[3][1])
-				ctx.lineTo(self.edges[0][0], self.edges[0][1])
-				const result = others
-					.map(other => sat(self.edges, other.edges))
-					.filter(a => a)[0]
-				if (result) {
-					ctx.fillStyle = "red"
-					ctx.moveTo(debugCanvas.width / 2, debugCanvas.height / 2)
-					ctx.arc(
-						debugCanvas.width / 2,
-						debugCanvas.height / 2,
-						2,
-						0,
-						Math.PI * 2,
-					)
-					ctx.lineTo(
-						debugCanvas.width / 2 + result.direction[0] * 20,
-						debugCanvas.height / 2 + result.direction[1] * 20,
-					)
-					ctx.stroke()
-				} else {
-					ctx.fillStyle = "black"
-				}
-				ctx.fill()
-			})
+		// cars
+		// 	.map(car => {
+		// 		const rect: Rectangle = {
+		// 			x: car.position[0],
+		// 			y: car.position[1],
+		// 			height: 2,
+		// 			width: 4.7,
+		// 			rotation: dir(car.direction),
+		// 		}
+		// 		return { car, edges: getEdges(rect), rect }
+		// 	})
+		// 	.map((self, i, cars) => {
+		// 		const others = cars.filter((_, j) => i !== j)
+		// 		ctx.beginPath()
+		// 		ctx.moveTo(self.edges[0][0], self.edges[0][1])
+		// 		ctx.lineTo(self.edges[1][0], self.edges[1][1])
+		// 		ctx.lineTo(self.edges[2][0], self.edges[2][1])
+		// 		ctx.lineTo(self.edges[3][0], self.edges[3][1])
+		// 		ctx.lineTo(self.edges[0][0], self.edges[0][1])
+		// 		const result = others
+		// 			.map(other => sat(self.edges, other.edges))
+		// 			.filter(a => a)[0]
+		// 		if (result) {
+		// 			ctx.fillStyle = "red"
+		// 			ctx.moveTo(debugCanvas.width / 2, debugCanvas.height / 2)
+		// 			ctx.arc(
+		// 				debugCanvas.width / 2,
+		// 				debugCanvas.height / 2,
+		// 				2,
+		// 				0,
+		// 				Math.PI * 2,
+		// 			)
+		// 			ctx.lineTo(
+		// 				debugCanvas.width / 2 + result.direction[0] * 20,
+		// 				debugCanvas.height / 2 + result.direction[1] * 20,
+		// 			)
+		// 			ctx.stroke()
+		// 		} else {
+		// 			ctx.fillStyle = "black"
+		// 		}
+		// 		ctx.fill()
+		// 	})
 
-		renderEntity(world, entities, [0, 0])
+		// renderEntity(world, entities, [0, 0])
 		renderer3d.renderer.render(scene, renderer3d.camera)
 
 		inputs.step()

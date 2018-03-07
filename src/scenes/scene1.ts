@@ -65,6 +65,7 @@ export const build = async (
 			material,
 		),
 		image: "juice",
+		offset: void 0,
 	})
 	playerImage.model.rotation.x = Math.PI / 2
 
@@ -81,6 +82,7 @@ export const build = async (
 		direction: [1, 0],
 		velocity: [0.01, 0],
 		position: [2, 2],
+		boundingBox: void 0,
 	})
 
 	const car2 = entities.createEntity("car-entity", {
@@ -90,6 +92,7 @@ export const build = async (
 		direction: [1, 0],
 		velocity: [0.01, 0],
 		position: [10, 14],
+		boundingBox: void 0,
 	})
 
 	const car3 = entities.createEntity("car-entity", {
@@ -99,6 +102,7 @@ export const build = async (
 		direction: [1, 0],
 		velocity: [0.01, -0.01],
 		position: [-5, 12],
+		boundingBox: void 0,
 	})
 
 	const player = entities.createEntity("player-entity", {

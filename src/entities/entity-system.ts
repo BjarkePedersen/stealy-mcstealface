@@ -1,4 +1,4 @@
-import { Omit } from "../misc"
+import { Optional } from "../misc"
 
 // Facade interface
 export interface EntityId {
@@ -31,9 +31,12 @@ export class EntitySystem<
 		return (this.nextId++ as any) as EntityId
 	}
 
-	createEntity = <T extends keyof EntityMap, S = EntityMap[T]>(
+	createEntity = <
+		T extends keyof EntityMap,
+		S extends EntityMap[T] = EntityMap[T]
+	>(
 		entityType: T,
-		body: Omit<S, "entityType">,
+		body: Optional<S, "entityType">,
 	): EntityType<S> =>
 		this.registerEntity({
 			entityType,

@@ -4,6 +4,11 @@ export const values = <T>(a: T) =>
 
 export type Omit<T, S> = Pick<T, Exclude<keyof T, S>>
 
+export type Optional<T, Fields extends keyof T> = {
+	[K in Exclude<keyof T, Fields>]: T[K]
+} &
+	{ [K in Fields]?: T[K] }
+
 export type Vec2 = [number, number]
 
 export const add = ([x0, y0]: Vec2, [x1, y1]: Vec2): Vec2 => [x0 + x1, y0 + y1]
@@ -16,8 +21,10 @@ export const lerp = ([x0, y0]: Vec2, t: number, [x1, y1]: Vec2): Vec2 => [
 ]
 export const len = ([x, y]: Vec2): number => Math.sqrt(x * x + y * y)
 export const abs = ([x, y]: Vec2): Vec2 => [Math.abs(x), Math.abs(y)]
-export const normalize = (a: Vec2): Vec2 => scale(a, 1 / len(a))
-export const unit = (a: Vec2): Vec2 => scale(a, 1 / len(a))
+export const normalize = (a: Vec2): Vec2 => {
+	const l = len(a)
+	return l == 0 ? [0, 0] : scale(a, 1 / len(a))
+}
 export const setLen = (a: Vec2, length: number): Vec2 =>
 	scale(a, length / len(a))
 export const dot = ([x0, y0]: Vec2, [x1, y1]: Vec2): number => x0 * x1 + y0 * y1
